@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import {
   Table,
   TableBody,
@@ -23,6 +23,8 @@ import { withDemoRepo } from "@/lib/store/demo-store";
 import * as repo from "@/lib/mock/repository";
 import { useActorUserId } from "@/lib/hooks/use-effective-role";
 import { toast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
+import { ChevronRight } from "lucide-react";
 
 interface AppointmentTableProps {
   state: DemoState;
@@ -46,10 +48,31 @@ export function AppointmentTable({
 }: AppointmentTableProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const actorUserId = useActorUserId();
-  const selected = useMemo(
-    () => appointments.find((a) => a.id === selectedId) ?? null,
-    [appointments, selectedId],
+
+  const sorted = useMemo(
+    () =>
+      [...appointments].sort((a, b) =>
+        a.scheduledStartIso.localeCompare(b.scheduledStartIso),
+      ),
+    [appointments],
   );
+
+  const selected = useMemo(
+    () => state.appointments.find((a) => a.id === selectedId) ?? null,
+    [state.appointments, selectedId],
+  );
+
+  function openAppointment(aptId: string) {
+    setSelectedId(aptId);
+    onAppointmentSelect?.(aptId);
+  }
+
+  function onRowKeyDown(e: KeyboardEvent<HTMLTableRowElement>, aptId: string) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openAppointment(aptId);
+    }
+  }
 
   async function onArrivalUpdate(
     apt: Appointment,
@@ -74,9 +97,9 @@ export function AppointmentTable({
     }
   }
 
-  if (appointments.length === 0) {
+  if (sorted.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted">
+      <p className="rounded-xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted shadow-sm">
         {emptyMessage}
       </p>
     );
@@ -84,62 +107,75 @@ export function AppointmentTable({
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Patient</TableHead>
-            <TableHead>Ref</TableHead>
-            {showDoctor ? <TableHead>Doctor</TableHead> : null}
-            <TableHead>Service</TableHead>
-            <TableHead>When</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Payment</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {appointments.map((apt) => (
-            <TableRow key={apt.id}>
-              <TableCell>
-                <button
-                  type="button"
-                  className="font-medium text-primary underline-offset-2 hover:underline"
-                  onClick={() => {
-                    setSelectedId(apt.id);
-                    onAppointmentSelect?.(apt.id);
-                  }}
-                >
-                  {patientName(state, apt.patientId)}
-                </button>
-              </TableCell>
-              <TableCell>
-                <button
-                  type="button"
-                  className="text-muted underline-offset-2 hover:text-foreground hover:underline"
-                  onClick={() => {
-                    setSelectedId(apt.id);
-                    onAppointmentSelect?.(apt.id);
-                  }}
-                >
-                  {bookingRef(apt.id)}
-                </button>
-              </TableCell>
-              {showDoctor ? (
-                <TableCell>{doctorName(state, apt.doctorId)}</TableCell>
-              ) : null}
-              <TableCell>{serviceName(state, apt.serviceId)}</TableCell>
-              <TableCell>
-                {formatKarachi(apt.scheduledStartIso, "dd MMM · hh:mm a")}
-              </TableCell>
-              <TableCell>
-                <StatusBadge status={apt.status} />
-              </TableCell>
-              <TableCell>
-                <StatusBadge status={apt.paymentStatus} />
-              </TableCell>
+      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead>Patient</TableHead>
+              <TableHead>Ref</TableHead>
+              {showDoctor ? <TableHead>Doctor</TableHead> : null}
+              <TableHead>Service</TableHead>
+              <TableHead>When</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Payment</TableHead>
+              <TableHead className="w-10">
+                <span className="sr-only">Open</span>
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {sorted.map((apt) => {
+              const isSelected = selectedId === apt.id;
+              return (
+                <TableRow
+                  key={apt.id}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Open details for ${patientName(state, apt.patientId)}, booking ${bookingRef(apt.id)}`}
+                  aria-pressed={isSelected}
+                  data-state={isSelected ? "selected" : undefined}
+                  className={cn(
+                    "cursor-pointer outline-none transition-colors hover:bg-primary/[0.04] focus-visible:bg-primary/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                    isSelected && "bg-primary/[0.06]",
+                  )}
+                  onClick={() => openAppointment(apt.id)}
+                  onKeyDown={(e) => onRowKeyDown(e, apt.id)}
+                >
+                  <TableCell className="font-medium text-foreground">
+                    {patientName(state, apt.patientId)}
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-xs tracking-wide text-muted">
+                      {bookingRef(apt.id)}
+                    </span>
+                  </TableCell>
+                  {showDoctor ? (
+                    <TableCell className="text-foreground/90">
+                      {doctorName(state, apt.doctorId)}
+                    </TableCell>
+                  ) : null}
+                  <TableCell>{serviceName(state, apt.serviceId)}</TableCell>
+                  <TableCell className="whitespace-nowrap tabular-nums">
+                    {formatKarachi(apt.scheduledStartIso, "hh:mm a")}
+                    <span className="ml-1 text-xs text-muted">
+                      {formatKarachi(apt.scheduledStartIso, "dd MMM")}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={apt.status} />
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={apt.paymentStatus} />
+                  </TableCell>
+                  <TableCell className="text-muted">
+                    <ChevronRight className="size-4" aria-hidden />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
 
       <AppointmentDetailSheet
         open={!!selected}

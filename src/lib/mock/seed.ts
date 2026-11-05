@@ -345,7 +345,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     createdAt: nowIso,
   });
 
-  pushApt({
+  const confirmed2 = pushApt({
     patientId: "pat-2",
     doctorId: "doc-khan",
     serviceId: "svc-consult-ortho",
@@ -513,11 +513,13 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     {
       id: id("cb"),
       patientId: "pat-3",
+      appointmentId: awaiting.id,
       phoneE164: "+923331234567",
-      reason: "Follow-up on expired reservation and partial payment",
+      reason: "Payment not received — patient claims bank transfer sent",
       status: "pending",
       language: "ur",
-      summary: "Patient asked about refund policy after slot expired",
+      summary:
+        "AI booked echo; patient asked how to confirm after transferring fees",
       notes: [],
       transcriptUnavailable: true,
       createdAt: addMinutesIso(nowIso, -180),
@@ -548,12 +550,20 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     {
       id: id("cb"),
       patientId: "pat-2",
+      appointmentId: confirmed2.id,
       phoneE164: "+923211234567",
-      reason: "Insurance documentation",
+      reason: "Insurance documentation for today's visit",
       status: "in_progress",
       assignedToUserId: "user-reception-sara",
-      summary: "Needs stamped receipt for employer",
-      notes: [],
+      summary: "Needs stamped receipt for employer after checkup",
+      notes: [
+        {
+          id: id("cbn"),
+          authorUserId: "user-reception-sara",
+          body: "Patient arrived; collecting employer form at reception desk",
+          createdAt: addMinutesIso(nowIso, -30),
+        },
+      ],
       transcriptUnavailable: true,
       createdAt: addMinutesIso(nowIso, -90),
       updatedAt: addMinutesIso(nowIso, -30),
@@ -589,24 +599,39 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     {
       id: id("call"),
       patientId: "pat-3",
+      appointmentId: awaiting.id,
       direction: "inbound",
       startedAt: addMinutesIso(nowIso, -200),
       endedAt: addMinutesIso(nowIso, -195),
       durationSeconds: 300,
       language: "ur",
-      summary: "Billing question (demo)",
+      summary:
+        "AI receptionist reserved echocardiography. Patient asked about payment channels and confirmation timing. Provisional hold explained; human payment verification required.",
     },
     {
       id: id("call"),
       patientId: "pat-1",
       appointmentId: confirmed1.id,
-      direction: "outbound",
+      direction: "inbound",
       startedAt: addMinutesIso(nowIso, -100),
       endedAt: addMinutesIso(nowIso, -97),
       durationSeconds: 180,
       language: "en",
       transferOutcome: "failed",
-      summary: "Transfer to clinical desk failed — number not configured",
+      summary:
+        "Patient confirmed cardio consult for today 10:00. Requested human transfer for a clinical question — transfer failed (destination not configured). Booking remained confirmed.",
+    },
+    {
+      id: id("call"),
+      patientId: "pat-2",
+      appointmentId: confirmed2.id,
+      direction: "inbound",
+      startedAt: addMinutesIso(nowIso, -150),
+      endedAt: addMinutesIso(nowIso, -146),
+      durationSeconds: 240,
+      language: "en",
+      summary:
+        "Orthopedic consult booked and paid. Patient asked for an employer insurance receipt after today's visit.",
     },
   ];
 

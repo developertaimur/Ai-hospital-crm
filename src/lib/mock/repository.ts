@@ -756,6 +756,49 @@ export function addCallbackNoteSync(
   return { state: { ...state, callbacks }, result: updated };
 }
 
+export function addAppointmentNoteSync(
+  state: DemoState,
+  appointmentId: string,
+  authorUserId: string,
+  body: string,
+): { state: DemoState; result: Appointment } {
+  const trimmed = body.trim();
+  if (!trimmed) {
+    throw new DemoOperationError("Note cannot be empty", "addAppointmentNote");
+  }
+  const idx = state.appointments.findIndex((a) => a.id === appointmentId);
+  if (idx === -1) {
+    throw new DemoOperationError("Appointment not found", "addAppointmentNote");
+  }
+  const nowIso = new Date().toISOString();
+  const stamp = formatKarachi(nowIso, "dd MMM yyyy HH:mm");
+  const author =
+    state.users.find((u) => u.id === authorUserId)?.displayName ?? authorUserId;
+  const line = `[${stamp} · ${author}] ${trimmed}`;
+  const prev = state.appointments[idx].notes?.trim();
+  const updated: Appointment = {
+    ...state.appointments[idx],
+    notes: prev ? `${prev}\n${line}` : line,
+    updatedAt: nowIso,
+  };
+  const appointments = [...state.appointments];
+  appointments[idx] = updated;
+  return {
+    state: pushActivity(
+      { ...state, appointments },
+      {
+        type: "callback_updated",
+        actorUserId: authorUserId,
+        message: `Staff note added on booking ${appointmentId}`,
+        entityType: "appointment",
+        entityId: appointmentId,
+      },
+      nowIso,
+    ),
+    result: updated,
+  };
+}
+
 export function retryNotificationSync(
   state: DemoState,
   notificationId: string,
@@ -1024,6 +1067,17 @@ export async function addCallbackNote(
 ) {
   return runMutation(adapter, "addCallbackNote", (s) =>
     addCallbackNoteSync(s, callbackId, authorUserId, body),
+  );
+}
+
+export async function addAppointmentNote(
+  adapter: DemoStoreAdapter,
+  appointmentId: string,
+  authorUserId: string,
+  body: string,
+) {
+  return runMutation(adapter, "addAppointmentNote", (s) =>
+    addAppointmentNoteSync(s, appointmentId, authorUserId, body),
   );
 }
 

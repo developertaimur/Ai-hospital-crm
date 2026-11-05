@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1 as const;
+export const SCHEMA_VERSION = 2 as const;
 
 export type Role = "admin" | "doctor" | "reception";
 
@@ -204,6 +204,8 @@ export type CallbackStatus =
 export interface CallbackRequest {
   id: string;
   patientId: string;
+  /** Prefer matching callbacks to bookings by this ID, not patient name alone */
+  appointmentId?: string;
   phoneE164: string;
   preferredWindow?: string;
   reason: string;

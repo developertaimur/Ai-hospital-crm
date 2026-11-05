@@ -16,7 +16,10 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 z-50 bg-black/40", className)}
+    className={cn(
+      "fixed inset-0 z-50 bg-slate-900/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className,
+    )}
     {...props}
   />
 ));
@@ -36,18 +39,20 @@ const SheetContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-50 flex h-full flex-col gap-4 border-border bg-surface shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-300",
+        "fixed z-50 flex flex-col gap-0 border-border bg-surface shadow-xl outline-none transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-300",
+        // Mobile: full-screen; desktop: right drawer
+        "inset-0 h-dvh w-full max-w-none sm:inset-y-0 sm:h-full sm:max-w-lg",
         side === "right" &&
-          "inset-y-0 right-0 h-full w-full max-w-md border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+          "sm:left-auto sm:right-0 sm:border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
         side === "left" &&
-          "inset-y-0 left-0 h-full w-full max-w-md border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+          "sm:right-auto sm:left-0 sm:border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
         className,
       )}
       {...props}
     >
       {children}
       <DialogPrimitive.Close
-        className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-surface transition-opacity hover:opacity-100"
+        className="absolute right-4 top-4 z-10 rounded-md p-1.5 text-muted opacity-80 ring-offset-surface transition hover:bg-background hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         aria-label="Close panel"
       >
         <X className="h-4 w-4" />
@@ -62,7 +67,13 @@ function SheetHeader({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("flex flex-col gap-1.5 p-6 pb-0", className)} {...props} />
+    <div
+      className={cn(
+        "flex flex-col gap-1.5 border-b border-border bg-surface px-6 pb-4 pt-6 pr-14",
+        className,
+      )}
+      {...props}
+    />
   );
 }
 
@@ -72,7 +83,7 @@ function SheetTitle({
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn("text-lg font-semibold text-foreground", className)}
+      className={cn("text-xl font-semibold tracking-tight text-foreground", className)}
       {...props}
     />
   );

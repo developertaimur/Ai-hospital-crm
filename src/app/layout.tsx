@@ -16,7 +16,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col font-sans">
+      <body
+        className="flex min-h-full flex-col font-sans"
+        // Avoid noisy hydration warnings from browser extensions that inject
+        // attributes (e.g. cz-shortcut-listen) onto <body>.
+        suppressHydrationWarning
+      >
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
