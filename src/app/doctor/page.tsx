@@ -27,15 +27,15 @@ export default function DoctorTodayPage() {
     (a) =>
       a.doctorId === doctorId &&
       toKarachiDateKey(a.scheduledStartIso) === todayKey &&
-      a.status !== "cancelled",
+      a.status === "confirmed",
   );
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Today</h1>
       <p className="text-sm text-muted">
-        Arrival lifecycle only — payment verification is not available for
-        doctors. Payment clearance shown separately.
+        Confirmed queue only · arrival lifecycle · payment verification is
+        Admin-only.
       </p>
       <AppointmentTable
         state={state}

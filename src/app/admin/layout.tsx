@@ -7,6 +7,7 @@ import { RoleGuard } from "@/components/layout/role-guard";
 const nav: NavItem[] = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/appointments", label: "Appointments" },
+  { href: "/admin/new-appointment", label: "New appointment" },
   { href: "/admin/doctors", label: "Doctors" },
   { href: "/admin/patients", label: "Patients" },
   { href: "/admin/payments", label: "Payments" },

@@ -23,6 +23,7 @@ function staffUsersFromDemoAccounts(): User[] {
     doctorId: a.doctorId,
     permissions: a.permissions,
     active: true,
+    password: a.password,
   }));
 }
 
@@ -80,6 +81,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       displayName: "Dr. Ahmed Hassan",
       title: "Consultant Cardiologist",
       departmentId: "dept-cardio",
+      active: true,
     },
     {
       id: "doc-khan",
@@ -87,6 +89,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       displayName: "Dr. Imran Khan",
       title: "Orthopedic Surgeon",
       departmentId: "dept-ortho",
+      active: true,
     },
     {
       id: "doc-fatima",
@@ -94,6 +97,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       displayName: "Dr. Fatima Noor",
       title: "General Physician",
       departmentId: "dept-gp",
+      active: true,
     },
     {
       id: "doc-ali",
@@ -101,6 +105,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       displayName: "Dr. Ali Raza",
       title: "Pediatrician",
       departmentId: "dept-peds",
+      active: true,
     },
     {
       id: "doc-sana",
@@ -108,6 +113,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       displayName: "Dr. Sana Iqbal",
       title: "Dermatologist",
       departmentId: "dept-derm",
+      active: true,
     },
     {
       id: "doc-hassan",
@@ -115,6 +121,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       displayName: "Dr. Hassan Malik",
       title: "Cardiology Fellow",
       departmentId: "dept-cardio",
+      active: true,
     },
   ];
 
@@ -340,7 +347,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     amountPaisa: 500000,
     verified: true,
     verifiedAt: nowIso,
-    verifiedByUserId: "user-reception-sara",
+    verifiedByUserId: "user-admin",
     method: "bank_transfer",
     createdAt: nowIso,
   });
@@ -420,7 +427,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     amountPaisa: 150000,
     verified: true,
     verifiedAt: addMinutesIso(nowIso, -120),
-    verifiedByUserId: "user-reception-sara",
+    verifiedByUserId: "user-admin",
     method: "cash",
     createdAt: addMinutesIso(nowIso, -120),
   });
@@ -600,11 +607,21 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       id: id("call"),
       patientId: "pat-3",
       appointmentId: awaiting.id,
+      callerName: "Ayesha Riaz",
+      callerNumber: "0300-1112233",
       direction: "inbound",
       startedAt: addMinutesIso(nowIso, -200),
       endedAt: addMinutesIso(nowIso, -195),
       durationSeconds: 300,
       language: "ur",
+      requestedDoctorId: "doc-hassan",
+      requestedServiceId: "svc-echo",
+      bookingOutcome: "provisional_reservation",
+      forwardedToAdmin: false,
+      patientTranscript:
+        "Assalam o alaikum — mujhe echocardiography ke liye booking chahiye. Payment kaise confirm hogi?",
+      aiTranscript:
+        "Wa alaikum assalam. Maine Dr. Hassan Malik ke saath provisional echo slot hold ki hai. Confirmation Admin payment verify ke baad hogi (demo).",
       summary:
         "AI receptionist reserved echocardiography. Patient asked about payment channels and confirmation timing. Provisional hold explained; human payment verification required.",
     },
@@ -612,26 +629,104 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       id: id("call"),
       patientId: "pat-1",
       appointmentId: confirmed1.id,
+      callerName: "Bilal Ahmed",
+      callerNumber: "0321-4455667",
       direction: "inbound",
       startedAt: addMinutesIso(nowIso, -100),
       endedAt: addMinutesIso(nowIso, -97),
       durationSeconds: 180,
       language: "en",
       transferOutcome: "failed",
+      requestedDoctorId: "doc-ahmed",
+      requestedServiceId: "svc-consult-cardio",
+      bookingOutcome: "confirmed",
+      forwardedToAdmin: true,
+      patientTranscript:
+        "My cardio consult is today at 10. Can you transfer me to ask about my ECG results?",
+      aiTranscript:
+        "Your booking is already confirmed. I’m attempting a human transfer for the clinical question — transfer destination is not configured in this demo.",
       summary:
-        "Patient confirmed cardio consult for today 10:00. Requested human transfer for a clinical question — transfer failed (destination not configured). Booking remained confirmed.",
+        "Patient confirmed cardio consult for today 10:00. Requested human transfer for a clinical question — transfer failed (destination not configured). Booking remained confirmed. Forwarded clinical follow-up note to Admin.",
     },
     {
       id: id("call"),
       patientId: "pat-2",
       appointmentId: confirmed2.id,
+      callerName: "Sana Khan",
+      callerNumber: "0333-7788990",
       direction: "inbound",
       startedAt: addMinutesIso(nowIso, -150),
       endedAt: addMinutesIso(nowIso, -146),
       durationSeconds: 240,
       language: "en",
+      requestedDoctorId: "doc-khan",
+      requestedServiceId: "svc-consult-ortho",
+      bookingOutcome: "confirmed",
+      forwardedToAdmin: false,
+      patientTranscript:
+        "I already paid for ortho. Can I get an employer insurance receipt after today’s visit?",
+      aiTranscript:
+        "Yes — your appointment is confirmed. I’ve noted the insurance receipt request for front-desk Admin follow-up after the visit.",
       summary:
         "Orthopedic consult booked and paid. Patient asked for an employer insurance receipt after today's visit.",
+    },
+    {
+      id: id("call"),
+      callerName: "Omar Farooq",
+      callerNumber: "0345-5566778",
+      direction: "inbound",
+      startedAt: addMinutesIso(nowIso, -45),
+      endedAt: addMinutesIso(nowIso, -42),
+      durationSeconds: 165,
+      language: "en",
+      requestedDoctorId: "doc-fatima",
+      requestedServiceId: "svc-consult-gp",
+      bookingOutcome: "callback_requested",
+      forwardedToAdmin: true,
+      patientTranscript:
+        "I need a GP slot this week but I’m not sure which insurance panel I’m on. Can someone call me back?",
+      aiTranscript:
+        "I can’t confirm insurance panels in this demo. I’ve created a callback request and forwarded it to Admin for a human follow-up.",
+      summary:
+        "Caller requested GP availability but insurance panel was unclear. No booking created. Callback forwarded to Admin.",
+    },
+    {
+      id: id("call"),
+      callerName: "Unknown caller",
+      callerNumber: "0312-9001122",
+      direction: "inbound",
+      startedAt: addMinutesIso(nowIso, -30),
+      endedAt: addMinutesIso(nowIso, -29),
+      durationSeconds: 48,
+      language: "ur",
+      bookingOutcome: "abandoned",
+      forwardedToAdmin: false,
+      patientTranscript: "Hello? … (silence)",
+      aiTranscript:
+        "Assalam o alaikum, Life Care International Hospital AI receptionist. Kya main aap ki madad kar sakti hoon?",
+      summary:
+        "Short abandoned inbound call — no patient match, no booking, no callback.",
+    },
+    {
+      id: id("call"),
+      patientId: "pat-8",
+      callerName: "Hassan Ali",
+      callerNumber: "0322-1122334",
+      direction: "inbound",
+      startedAt: addMinutesIso(nowIso, -720),
+      endedAt: addMinutesIso(nowIso, -716),
+      durationSeconds: 210,
+      language: "en",
+      requestedDoctorId: "doc-sana",
+      requestedServiceId: "svc-consult-derm",
+      bookingOutcome: "forwarded_to_admin",
+      forwardedToAdmin: true,
+      patientTranscript:
+        "I missed a dermatology callback earlier. Please have Admin call me about evening slots.",
+      aiTranscript:
+        "Noted. No new provisional hold created. I’ve forwarded your callback preference to Admin.",
+      summary:
+        "Returning caller without a new booking. Request forwarded to Admin callback queue.",
     },
   ];
 
@@ -652,14 +747,14 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     {
       id: id("act"),
       type: "appointment_created",
-      actorUserId: "user-reception-sara",
+      actorUserId: "user-admin",
       message: "Seed data initialized for demo",
       createdAt: nowIso,
     },
     {
       id: id("act"),
       type: "payment_verified",
-      actorUserId: "user-reception-sara",
+      actorUserId: "user-admin",
       message: `Verified payment for appointment ${confirmed1.id}`,
       entityType: "appointment",
       entityId: confirmed1.id,
@@ -676,6 +771,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       doctorId: "doc-fatima",
       permissions: ["view_dashboard", "view_own_schedule", "update_arrival", "view_activity"],
       active: true,
+      password: "doctor123",
     },
     {
       id: "user-doc-ali",
@@ -685,6 +781,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       doctorId: "doc-ali",
       permissions: ["view_dashboard", "view_own_schedule", "update_arrival", "view_activity"],
       active: true,
+      password: "doctor123",
     },
     {
       id: "user-doc-sana",
@@ -694,6 +791,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       doctorId: "doc-sana",
       permissions: ["view_dashboard", "view_own_schedule", "update_arrival", "view_activity"],
       active: true,
+      password: "doctor123",
     },
     {
       id: "user-doc-hassan",
@@ -703,6 +801,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
       doctorId: "doc-hassan",
       permissions: ["view_dashboard", "view_own_schedule", "update_arrival", "view_activity"],
       active: true,
+      password: "doctor123",
     },
   ];
 
@@ -729,12 +828,16 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     activityEvents,
     hospitalSettings: {
       hospitalName: "Life Care International Hospital",
-      locationPlaceholder: "Karachi — address placeholder for demo",
+      locationPlaceholder: "Islamabad — address placeholder for demo",
       timezone: "Asia/Karachi",
       transferPhoneNumber: null,
       clinicalEscalationContact: null,
       aiChangePolicy: "pending_configuration",
       defaultReservationExpiryMinutes: 60,
+      aiReceptionEnabled: true,
+      aiDefaultLanguage: "en",
+      aiGreetingNote:
+        "Life Care International Hospital AI receptionist (demo).",
     },
     processedClientRequestIds: [],
   };

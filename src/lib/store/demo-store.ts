@@ -49,7 +49,7 @@ export const useDemoStore = create<DemoStore>((set, get) => ({
     loaded = reconcile(loaded);
     saveState(loaded);
     set({ state: loaded, hydrated: true });
-    useAuthStore.getState().restoreSession();
+    useAuthStore.getState().restoreSession(loaded.users);
     const authSession = useAuthStore.getState().session;
     if (authSession) {
       set({ session: authSession });

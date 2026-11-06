@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import {
   Table,
   TableBody,
@@ -9,20 +9,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { InboundCallDetailSheet } from "@/components/calls/inbound-call-detail-sheet";
 import { useDemoReady } from "@/lib/hooks/use-demo-ready";
+import {
+  bookingOutcomeLabel,
+  callerDisplayName,
+  callerDisplayNumber,
+  formatCallDuration,
+} from "@/lib/display/lookups";
 import { formatKarachi } from "@/lib/time";
-import { patientName } from "@/lib/display/lookups";
 import type { CallRecord } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export default function AdminCallsPage() {
   const { ready, state } = useDemoReady();
-  const [selected, setSelected] = useState<CallRecord | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const calls = useMemo(() => {
+    if (!state) return [];
+    return [...state.callRecords].sort((a, b) =>
+      b.startedAt.localeCompare(a.startedAt),
+    );
+  }, [state]);
+
+  const selected: CallRecord | null = useMemo(() => {
+    if (!state || !selectedId) return null;
+    return state.callRecords.find((c) => c.id === selectedId) ?? null;
+  }, [state, selectedId]);
+
+  function onRowKeyDown(e: KeyboardEvent<HTMLTableRowElement>, id: string) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setSelectedId(id);
+    }
+  }
 
   if (!ready || !state) {
     return <p className="text-sm text-muted">Loading calls…</p>;
@@ -31,89 +51,66 @@ export default function AdminCallsPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Calls</h1>
-      <p className="text-sm text-muted">Simulated call records from demo seed.</p>
+      <p className="text-sm text-muted">
+        Simulated call records from demo seed ({calls.length} total).
+      </p>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Direction</TableHead>
-            <TableHead>Patient</TableHead>
+            <TableHead>Caller</TableHead>
+            <TableHead>Number</TableHead>
             <TableHead>Started</TableHead>
             <TableHead>Language</TableHead>
             <TableHead>Duration</TableHead>
-            <TableHead>Transfer</TableHead>
+            <TableHead>Outcome</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {state.callRecords.map((c) => (
-            <TableRow key={c.id}>
-              <TableCell>
-                <button
-                  type="button"
-                  className="capitalize text-primary hover:underline"
-                  onClick={() => setSelected(c)}
-                >
+          {calls.map((c) => {
+            const isSelected = selectedId === c.id;
+            return (
+              <TableRow
+                key={c.id}
+                tabIndex={0}
+                role="button"
+                aria-pressed={isSelected}
+                className={cn(
+                  "cursor-pointer outline-none hover:bg-primary/[0.04] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                  isSelected && "bg-primary/[0.06]",
+                )}
+                onClick={() => setSelectedId(c.id)}
+                onKeyDown={(e) => onRowKeyDown(e, c.id)}
+              >
+                <TableCell className="capitalize text-primary">
                   {c.direction}
-                </button>
-              </TableCell>
-              <TableCell>
-                {c.patientId ? patientName(state, c.patientId) : "—"}
-              </TableCell>
-              <TableCell>
-                {formatKarachi(c.startedAt, "dd MMM yyyy · hh:mm a")}
-              </TableCell>
-              <TableCell>{c.language?.toUpperCase() ?? "—"}</TableCell>
-              <TableCell>
-                {c.durationSeconds != null
-                  ? `${Math.round(c.durationSeconds / 60)} min`
-                  : "—"}
-              </TableCell>
-              <TableCell>{c.transferOutcome?.replace("_", " ") ?? "—"}</TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+                <TableCell>{callerDisplayName(state, c)}</TableCell>
+                <TableCell className="tabular-nums">
+                  {callerDisplayNumber(state, c)}
+                </TableCell>
+                <TableCell>
+                  {formatKarachi(c.startedAt, "dd MMM yyyy · hh:mm a")}
+                </TableCell>
+                <TableCell>{c.language?.toUpperCase() ?? "—"}</TableCell>
+                <TableCell>
+                  {formatCallDuration(c.durationSeconds)}
+                </TableCell>
+                <TableCell>
+                  {bookingOutcomeLabel(c.bookingOutcome)}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
 
-      <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Call detail</SheetTitle>
-          </SheetHeader>
-          {selected ? (
-            <dl className="mt-4 space-y-2 px-6 text-sm">
-              <div>
-                <dt className="text-muted">ID</dt>
-                <dd>{selected.id}</dd>
-              </div>
-              <div>
-                <dt className="text-muted">Language</dt>
-                <dd>{selected.language?.toUpperCase() ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-muted">Duration</dt>
-                <dd>
-                  {selected.durationSeconds != null
-                    ? `${selected.durationSeconds} seconds`
-                    : "—"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted">Summary</dt>
-                <dd className="whitespace-pre-wrap">
-                  {selected.summary ?? "—"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted">Ended</dt>
-                <dd>
-                  {selected.endedAt
-                    ? formatKarachi(selected.endedAt, "dd MMM yyyy · hh:mm a")
-                    : "—"}
-                </dd>
-              </div>
-            </dl>
-          ) : null}
-        </SheetContent>
-      </Sheet>
+      <InboundCallDetailSheet
+        open={!!selected}
+        onOpenChange={(o) => !o && setSelectedId(null)}
+        call={selected}
+        state={state}
+      />
     </div>
   );
 }

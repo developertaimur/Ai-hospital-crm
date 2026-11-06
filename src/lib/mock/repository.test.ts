@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   createPatientSync,
   createPaymentClaimSync,
+  cancelAppointmentSync,
   createReservationSync,
   DemoOperationError,
   getAppointments,
@@ -165,7 +166,7 @@ describe("repository", () => {
       {
         appointmentId: apt.id,
         amountPaisa: Math.ceil(fee / 2),
-        actorUserId: "user-reception-sara",
+        actorUserId: "user-admin",
         method: "cash",
       },
       now,
@@ -214,7 +215,7 @@ describe("repository", () => {
       {
         appointmentId: apt.id,
         amountPaisa: belowHalf,
-        actorUserId: "user-reception-sara",
+        actorUserId: "user-admin",
         method: "bank_transfer",
       },
       now,
@@ -237,6 +238,41 @@ describe("repository", () => {
         actorUserId: "user-doc-ahmed",
         method: "cash",
       }),
+    ).toThrow(DemoOperationError);
+  });
+
+  it("denies verify_payment, cancel, and callback updates to reception", () => {
+    const now = getDemoNow();
+    const state = createSeedState(now);
+    const awaiting = state.appointments.find(
+      (a) => a.status === "awaiting_payment",
+    )!;
+    const confirmed = state.appointments.find((a) => a.status === "confirmed")!;
+    const callback = state.callbacks[0]!;
+
+    expect(() =>
+      recordVerifiedPaymentSync(state, {
+        appointmentId: awaiting.id,
+        amountPaisa: 100000,
+        actorUserId: "user-reception-sara",
+        method: "cash",
+      }),
+    ).toThrow(DemoOperationError);
+
+    expect(() =>
+      cancelAppointmentSync(state, {
+        appointmentId: confirmed.id,
+        actorUserId: "user-reception-sara",
+      }),
+    ).toThrow(DemoOperationError);
+
+    expect(() =>
+      updateCallbackStatusSync(
+        state,
+        callback.id,
+        "completed",
+        "user-reception-sara",
+      ),
     ).toThrow(DemoOperationError);
   });
 
@@ -269,7 +305,7 @@ describe("repository", () => {
       {
         appointmentId: apt.id,
         amountPaisa: Math.ceil(fee / 2),
-        actorUserId: "user-reception-sara",
+        actorUserId: "user-admin",
         method: "cash",
       },
       new Date(expiredAt),
@@ -319,7 +355,7 @@ describe("repository", () => {
       {
         appointmentId: apt.id,
         amountPaisa: Math.ceil(fee / 2),
-        actorUserId: "user-reception-sara",
+        actorUserId: "user-admin",
         method: "cash",
       },
       new Date(expiredAt),
@@ -341,7 +377,7 @@ describe("repository", () => {
       state,
       callback.id,
       "completed",
-      "user-reception-sara",
+      "user-admin",
     );
     const cb = next.callbacks.find((c) => c.id === callback.id)!;
     expect(cb.status).toBe("completed");
@@ -366,6 +402,7 @@ describe("repository", () => {
       {
         appointmentId: toMove.id,
         newStartIso: occupiedStart,
+        actorUserId: "user-admin",
       },
       now,
     );

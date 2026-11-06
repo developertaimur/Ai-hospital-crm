@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 2 as const;
+export const SCHEMA_VERSION = 4 as const;
 
 export type Role = "admin" | "doctor" | "reception";
 
@@ -24,6 +24,8 @@ export interface User {
   doctorId?: string;
   permissions: Permission[];
   active: boolean;
+  /** Demo-only plaintext password for local login (not production-safe). */
+  password?: string;
 }
 
 export interface Doctor {
@@ -33,6 +35,8 @@ export interface Doctor {
   title: string;
   departmentId: string;
   bio?: string;
+  /** Soft-delete / deactivate from Admin; historical bookings remain. */
+  active: boolean;
 }
 
 export interface Department {
@@ -180,10 +184,22 @@ export type TransferOutcome =
 
 export type DemoLocale = "en" | "ur";
 
+export type BookingOutcome =
+  | "none"
+  | "provisional_reservation"
+  | "confirmed"
+  | "forwarded_to_admin"
+  | "callback_requested"
+  | "abandoned";
+
 export interface CallRecord {
   id: string;
+  /** Present when the caller is matched to a known patient */
   patientId?: string;
   appointmentId?: string;
+  /** For calls without a matched patient/booking */
+  callerName?: string;
+  callerNumber?: string;
   direction: "inbound" | "outbound";
   startedAt: string;
   endedAt?: string;
@@ -192,6 +208,13 @@ export interface CallRecord {
   language?: DemoLocale;
   transferOutcome?: TransferOutcome;
   summary?: string;
+  /** Simulated Patient/AI conversation transcript (not a clinical record) */
+  patientTranscript?: string;
+  aiTranscript?: string;
+  requestedDoctorId?: string;
+  requestedServiceId?: string;
+  bookingOutcome?: BookingOutcome;
+  forwardedToAdmin?: boolean;
 }
 
 export type CallbackStatus =
@@ -265,7 +288,10 @@ export type ActivityEventType =
   | "callback_updated"
   | "settings_updated"
   | "demo_reset"
-  | "staff_change_simulated";
+  | "staff_change_simulated"
+  | "doctor_created"
+  | "doctor_updated"
+  | "doctor_deactivated";
 
 export interface ActivityEvent {
   id: string;
@@ -290,6 +316,10 @@ export interface HospitalSettings {
   clinicalEscalationContact: string | null;
   aiChangePolicy: AiChangePolicy;
   defaultReservationExpiryMinutes: number;
+  /** When false, Reception should not auto-simulate AI inbound rings. */
+  aiReceptionEnabled: boolean;
+  aiDefaultLanguage: DemoLocale;
+  aiGreetingNote?: string;
 }
 
 export interface DemoState {

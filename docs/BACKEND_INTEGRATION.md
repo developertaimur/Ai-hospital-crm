@@ -35,9 +35,11 @@ Pure helpers (`src/lib/mock/slots.ts`, `src/lib/mock/expiry.ts`, `src/lib/money.
 - Two clients booking the same slot must produce **one winner**; use row locks, compare-and-swap on slot version, or serializable isolation.
 - Reschedule and post-expiry payment verification must **re-check** slot availability against current holds and confirmed appointments.
 
-### Payment permissions
+### Payment & lifecycle permissions
 
-- Only roles with **`verify_payment`** may call verify endpoints (reception/admin — not doctors in this demo).
+- Only **Admin** (`verify_payment`, `manage_appointments`, `manage_callbacks`) may verify payments, confirm/cancel/reschedule bookings, or manage callbacks in this demo.
+- **Reception** is view-only (`view_calls`, `view_dashboard`, `view_activity`) — inbound call monitor and status read-outs; mutations must be rejected server-side even if UI is bypassed.
+- **Doctors** see **confirmed** appointments only and may update arrival lifecycle (`update_arrival`); they cannot verify payments.
 - **Claims** are intake only; confirmation requires verified ledger entries and the 50% rule (`meetsHalfThreshold` in `src/lib/money.ts`).
 
 ### Scheduled expiry

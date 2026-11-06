@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DEMO_ACCOUNTS, getHomePath } from "@/lib/auth/demo-accounts";
+import { getHomePath, listLoginAccounts } from "@/lib/auth/demo-accounts";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useDemoStore } from "@/lib/store/demo-store";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,8 @@ export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
   const setSession = useDemoStore((s) => s.setSession);
+  const hydrate = useDemoStore((s) => s.hydrate);
+  const demoUsers = useDemoStore((s) => s.state?.users);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,12 +32,16 @@ export default function LoginPage() {
   const [accountsOpen, setAccountsOpen] = useState(false);
   const accountsPanelId = useId();
 
+  const loginAccounts = listLoginAccounts(demoUsers);
+
   function submit(e: FormEvent) {
     e.preventDefault();
     if (busy) return;
     setBusy(true);
     setError("");
-    const ok = login(username.trim(), password);
+    hydrate();
+    const users = useDemoStore.getState().state?.users;
+    const ok = login(username.trim(), password, users);
     if (!ok) {
       setError("Invalid username or password.");
       setBusy(false);
@@ -43,7 +49,6 @@ export default function LoginPage() {
     }
     const session = useAuthStore.getState().session!;
     setSession(session);
-    useDemoStore.getState().hydrate();
     router.push(getHomePath(session.role));
   }
 
@@ -176,9 +181,9 @@ export default function LoginPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {DEMO_ACCOUNTS.map((a) => (
+                      {loginAccounts.map((a) => (
                         <TableRow
-                          key={a.username}
+                          key={`${a.source}-${a.username}`}
                           tabIndex={0}
                           role="button"
                           aria-label={`Use ${a.role} account ${a.username}`}
@@ -191,7 +196,14 @@ export default function LoginPage() {
                             }
                           }}
                         >
-                          <TableCell className="capitalize">{a.role}</TableCell>
+                          <TableCell className="capitalize">
+                            {a.role}
+                            {a.source === "admin" ? (
+                              <span className="ml-1 text-[10px] text-muted">
+                                (admin)
+                              </span>
+                            ) : null}
+                          </TableCell>
                           <TableCell>
                             <code className="text-xs">{a.username}</code>
                           </TableCell>

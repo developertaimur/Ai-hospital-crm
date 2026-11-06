@@ -1,9 +1,45 @@
 import type {
+  BookingOutcome,
   CallRecord,
   CallbackRequest,
   DemoState,
   Patient,
 } from "@/lib/types";
+
+const BOOKING_OUTCOME_LABELS: Record<BookingOutcome, string> = {
+  none: "No booking",
+  provisional_reservation: "Provisional reservation",
+  confirmed: "Confirmed booking",
+  forwarded_to_admin: "Forwarded to Admin",
+  callback_requested: "Callback requested",
+  abandoned: "Abandoned",
+};
+
+export function bookingOutcomeLabel(outcome?: BookingOutcome): string {
+  if (!outcome) return "—";
+  return BOOKING_OUTCOME_LABELS[outcome] ?? outcome;
+}
+
+export function callerDisplayName(
+  state: DemoState,
+  call: CallRecord,
+): string {
+  if (call.callerName) return call.callerName;
+  if (call.patientId) return patientName(state, call.patientId);
+  return "Unknown caller";
+}
+
+export function callerDisplayNumber(
+  state: DemoState,
+  call: CallRecord,
+): string {
+  if (call.callerNumber) return call.callerNumber;
+  if (call.patientId) {
+    const p = getPatient(state, call.patientId);
+    return p?.phoneNational ?? p?.phoneE164 ?? "—";
+  }
+  return "—";
+}
 
 export function patientName(state: DemoState, patientId: string): string {
   return state.patients.find((p) => p.id === patientId)?.fullName ?? "Unknown patient";

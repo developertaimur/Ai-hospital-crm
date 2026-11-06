@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,7 @@ export default function AdminStaffPage() {
       await withDemoRepo((a) =>
         repo.simulateStaffAccountChange(a, userId, { active: !active }),
       );
-      toast({ title: "[Simulated] Account status updated" });
+      toast({ title: "Account status updated" });
     } catch (e) {
       toast({
         title: "Failed",
@@ -55,7 +56,7 @@ export default function AdminStaffPage() {
           displayName: newName.trim(),
         }),
       );
-      toast({ title: "[Simulated] Display name updated" });
+      toast({ title: "Display name updated" });
       setNewName("");
     } finally {
       setBusy(false);
@@ -66,17 +67,29 @@ export default function AdminStaffPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Staff</h1>
       <p className="text-sm text-muted">
-        Create, disable, role, and password reset are simulated only — no real
-        identity provider.
+        Doctor create / login assignment lives on{" "}
+        <Link href="/admin/doctors" className="text-primary hover:underline">
+          Doctors
+        </Link>
+        . Passwords shown here are demo-only (browser state).
       </p>
       <div className="rounded-lg border border-dashed border-border p-4">
-        <p className="text-sm font-medium">Simulated create account</p>
+        <p className="text-sm font-medium">Create doctor account</p>
         <p className="text-xs text-muted">
-          Not persisted — use demo login accounts table on sign-in page.
+          Use Admin → Doctors → Add doctor to create profile + username/password.
         </p>
-        <Button type="button" className="mt-2" variant="secondary" disabled>
-          Create user (simulated — disabled)
+        <Button type="button" className="mt-2" variant="secondary" asChild>
+          <Link href="/admin/doctors">Open Doctors</Link>
         </Button>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="rename">Rename selected user (display name)</Label>
+        <Input
+          id="rename"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          placeholder="New display name"
+        />
       </div>
       <Table>
         <TableHeader>
@@ -84,6 +97,7 @@ export default function AdminStaffPage() {
             <TableHead>Name</TableHead>
             <TableHead>Username</TableHead>
             <TableHead>Role</TableHead>
+            <TableHead>Password</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -92,14 +106,17 @@ export default function AdminStaffPage() {
           {state.users.map((u) => (
             <TableRow key={u.id}>
               <TableCell>{u.displayName}</TableCell>
-              <TableCell>{u.username}</TableCell>
+              <TableCell>
+                <code className="text-xs">{u.username}</code>
+              </TableCell>
               <TableCell className="capitalize">{u.role}</TableCell>
               <TableCell>
-                {u.active ? (
-                  <Badge variant="success">Active</Badge>
-                ) : (
-                  <Badge variant="destructive">Disabled</Badge>
-                )}
+                <code className="text-xs">{u.password ?? "—"}</code>
+              </TableCell>
+              <TableCell>
+                <Badge variant={u.active ? "success" : "destructive"}>
+                  {u.active ? "Active" : "Inactive"}
+                </Badge>
               </TableCell>
               <TableCell className="space-x-2">
                 <Button
@@ -107,45 +124,24 @@ export default function AdminStaffPage() {
                   size="sm"
                   variant="secondary"
                   disabled={busy}
-                  onClick={() => toggleActive(u.id, u.active)}
+                  onClick={() => void toggleActive(u.id, u.active)}
                 >
-                  {u.active ? "Disable (sim)" : "Enable (sim)"}
+                  {u.active ? "Disable" : "Enable"}
                 </Button>
                 <Button
                   type="button"
                   size="sm"
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={() =>
-                    toast({
-                      title: "[Simulated] Password reset email queued",
-                    })
-                  }
+                  variant="secondary"
+                  disabled={busy || !newName.trim()}
+                  onClick={() => void rename(u.id)}
                 >
-                  Reset pwd (sim)
+                  Rename
                 </Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      <div className="max-w-md space-y-2 rounded-lg border border-border p-4">
-        <Label htmlFor="rename">Simulated rename (pick first staff row)</Label>
-        <Input
-          id="rename"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="New display name"
-        />
-        <Button
-          type="button"
-          size="sm"
-          disabled={!newName.trim() || busy}
-          onClick={() => state.users[0] && rename(state.users[0].id)}
-        >
-          Apply to {state.users[0]?.username}
-        </Button>
-      </div>
     </div>
   );
 }

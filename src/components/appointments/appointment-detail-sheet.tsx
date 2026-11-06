@@ -84,17 +84,18 @@ export function AppointmentDetailSheet({
     : null;
 
   useEffect(() => {
-    if (!open) {
-      setShowNoteForm(false);
-      setNoteDraft("");
-    }
-  }, [open]);
-
-  useEffect(() => {
     if (showNoteForm) {
       noteInputRef.current?.focus();
     }
   }, [showNoteForm]);
+
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      setShowNoteForm(false);
+      setNoteDraft("");
+    }
+    onOpenChange(next);
+  }
 
   if (!liveAppointment) return null;
 
@@ -104,9 +105,19 @@ export function AppointmentDetailSheet({
     liveAppointment.totalFeePaisa - liveAppointment.verifiedAmountPaisa;
   const call = findCallForAppointment(state, liveAppointment.id);
   const callback = findCallbackForAppointment(state, liveAppointment.id);
+  const actorPerms = actorUserId
+    ? getPermissionsForUser(actorUserId)
+    : [];
   const canVerify =
+    !!actorUserId && hasPermission(actorPerms, "verify_payment");
+  const canManageAppointments =
+    !!actorUserId && hasPermission(actorPerms, "manage_appointments");
+  const allowPaymentVerify = showPaymentVerify && canVerify;
+  const allowLifecycle =
+    showLifecycleActions &&
+    !!onArrivalUpdate &&
     !!actorUserId &&
-    hasPermission(getPermissionsForUser(actorUserId), "verify_payment");
+    hasPermission(actorPerms, "update_arrival");
 
   async function onAddNote() {
     if (!actorUserId || noteBusy || !liveAppointment) return;
@@ -140,7 +151,7 @@ export function AppointmentDetailSheet({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetContent className="overflow-hidden p-0">
           <SheetHeader>
             <SheetTitle className="pr-2">
@@ -167,7 +178,7 @@ export function AppointmentDetailSheet({
                 <FileText className="size-3.5" aria-hidden />
                 View booking
               </Button>
-              {showPaymentVerify && canVerify ? (
+              {allowPaymentVerify ? (
                 <Button
                   type="button"
                   size="sm"
@@ -179,15 +190,17 @@ export function AppointmentDetailSheet({
                   Verify payment
                 </Button>
               ) : null}
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() => setShowNoteForm(true)}
-              >
-                <NotebookPen className="size-3.5" aria-hidden />
-                Add note
-              </Button>
+              {canManageAppointments ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setShowNoteForm(true)}
+                >
+                  <NotebookPen className="size-3.5" aria-hidden />
+                  Add note
+                </Button>
+              ) : null}
             </div>
 
             <section
@@ -361,10 +374,30 @@ export function AppointmentDetailSheet({
                       {call.summary ?? "Summary unavailable"}
                     </dd>
                   </div>
-                  <p className="text-xs text-muted">
-                    Matched by call ID {call.id} → appointment{" "}
-                    {liveAppointment.id}. Transcript unavailable.
-                  </p>
+                  {call.patientTranscript || call.aiTranscript ? (
+                    <div className="space-y-2 border-t border-border pt-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                        Patient / AI transcript (demo)
+                      </p>
+                      {call.patientTranscript ? (
+                        <p className="whitespace-pre-wrap rounded-lg bg-background p-3 text-sm">
+                          <span className="font-medium">Patient: </span>
+                          {call.patientTranscript}
+                        </p>
+                      ) : null}
+                      {call.aiTranscript ? (
+                        <p className="whitespace-pre-wrap rounded-lg bg-background p-3 text-sm">
+                          <span className="font-medium">AI: </span>
+                          {call.aiTranscript}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted">
+                      Matched by call ID {call.id} → appointment{" "}
+                      {liveAppointment.id}.
+                    </p>
+                  )}
                 </dl>
               ) : (
                 <p className="rounded-lg border border-dashed border-border bg-background px-3 py-4 text-sm text-muted">
@@ -442,7 +475,7 @@ export function AppointmentDetailSheet({
                 </div>
               ) : null}
 
-              {showNoteForm ? (
+              {canManageAppointments && showNoteForm ? (
                 <div className="mt-4 space-y-2">
                   <Label htmlFor={noteFieldId}>Add note</Label>
                   <Textarea
@@ -479,7 +512,7 @@ export function AppointmentDetailSheet({
               ) : null}
             </section>
 
-            {showLifecycleActions && onArrivalUpdate ? (
+            {allowLifecycle ? (
               <div className="flex flex-wrap gap-2">
                 {(
                   [
@@ -494,7 +527,7 @@ export function AppointmentDetailSheet({
                     type="button"
                     size="sm"
                     variant="secondary"
-                    onClick={() => onArrivalUpdate(s)}
+                    onClick={() => onArrivalUpdate?.(s)}
                   >
                     Mark {s.replace("_", " ")}
                   </Button>
@@ -502,24 +535,31 @@ export function AppointmentDetailSheet({
               </div>
             ) : null}
 
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() => setRescheduleOpen(true)}
-              >
-                Reschedule
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="destructive"
-                onClick={() => setCancelOpen(true)}
-              >
-                Cancel booking
-              </Button>
-            </div>
+            {canManageAppointments ? (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setRescheduleOpen(true)}
+                >
+                  Reschedule
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setCancelOpen(true)}
+                >
+                  Cancel booking
+                </Button>
+              </div>
+            ) : (
+              <p className="rounded-lg border border-dashed border-border bg-background px-3 py-3 text-xs text-muted">
+                Confirm, cancel, and reschedule are Admin-only. Statuses above
+                are view-only for this role.
+              </p>
+            )}
 
             <section
               ref={paymentSectionRef}
@@ -532,7 +572,7 @@ export function AppointmentDetailSheet({
               >
                 Payment
               </h3>
-              {showPaymentVerify && canVerify ? (
+              {allowPaymentVerify ? (
                 <PaymentPanel
                   appointment={liveAppointment}
                   payments={state.payments}
@@ -547,8 +587,7 @@ export function AppointmentDetailSheet({
                   </p>
                   {!canVerify ? (
                     <p className="mt-2 text-xs text-muted">
-                      Payment verification requires authorised reception or admin
-                      staff.
+                      Payment verification is Admin-only.
                     </p>
                   ) : null}
                 </div>
@@ -557,17 +596,21 @@ export function AppointmentDetailSheet({
           </div>
         </SheetContent>
       </Sheet>
-      <RescheduleDialog
-        open={rescheduleOpen}
-        onOpenChange={setRescheduleOpen}
-        appointment={liveAppointment}
-        state={state}
-      />
-      <CancelDialog
-        open={cancelOpen}
-        onOpenChange={setCancelOpen}
-        appointment={liveAppointment}
-      />
+      {canManageAppointments ? (
+        <>
+          <RescheduleDialog
+            open={rescheduleOpen}
+            onOpenChange={setRescheduleOpen}
+            appointment={liveAppointment}
+            state={state}
+          />
+          <CancelDialog
+            open={cancelOpen}
+            onOpenChange={setCancelOpen}
+            appointment={liveAppointment}
+          />
+        </>
+      ) : null}
     </>
   );
 }

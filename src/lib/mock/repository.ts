@@ -1,4 +1,8 @@
-import { getPermissionsForUser, hasPermission } from "@/lib/auth/demo-accounts";
+import {
+  DOCTOR_PERMISSIONS,
+  getPermissionsForUser,
+  hasPermission,
+} from "@/lib/auth/demo-accounts";
 import { renderNotificationTemplate } from "@/lib/i18n/notification-templates";
 import { meetsHalfThreshold } from "@/lib/money";
 import { normalizePkMobile } from "@/lib/phone";
@@ -160,8 +164,9 @@ function queueNotification(
 
 // ——— Read helpers (pure) ———
 
-export function listDoctorsSync(state: DemoState) {
-  return state.doctors;
+export function listDoctorsSync(state: DemoState, opts?: { includeInactive?: boolean }) {
+  if (opts?.includeInactive) return state.doctors;
+  return state.doctors.filter((d) => d.active !== false);
 }
 
 export function getDoctorSync(state: DemoState, doctorId: string) {
@@ -231,6 +236,11 @@ export function createReservationSync(
   input: CreateReservationInput,
   now: Date = getDemoNow(),
 ): { state: DemoState; result: Appointment } {
+  // Staff-created reservations require manage_appointments (Admin).
+  // AI / system provisional holds may omit actorUserId.
+  if (input.actorUserId) {
+    requirePermission(state, input.actorUserId, "manage_appointments");
+  }
   let next = withReconcile(state, now);
   const nowIso = now.toISOString();
 
@@ -515,6 +525,10 @@ export function rescheduleAppointmentSync(
   },
   now: Date = getDemoNow(),
 ): { state: DemoState; result: Appointment } {
+  if (!input.actorUserId) {
+    throw new DemoOperationError("Actor required", "rescheduleAppointment");
+  }
+  requirePermission(state, input.actorUserId, "manage_appointments");
   let next = withReconcile(state, now);
   const nowIso = now.toISOString();
   const idx = next.appointments.findIndex((a) => a.id === input.appointmentId);
@@ -600,6 +614,10 @@ export function cancelAppointmentSync(
   input: { appointmentId: string; actorUserId?: string },
   now: Date = getDemoNow(),
 ): { state: DemoState; result: Appointment } {
+  if (!input.actorUserId) {
+    throw new DemoOperationError("Actor required", "cancelAppointment");
+  }
+  requirePermission(state, input.actorUserId, "manage_appointments");
   const nowIso = now.toISOString();
   const idx = state.appointments.findIndex((a) => a.id === input.appointmentId);
   if (idx === -1) {
@@ -683,6 +701,10 @@ export function updateCallbackStatusSync(
   status: CallbackStatus,
   actorUserId?: string,
 ): { state: DemoState; result: CallbackRequest } {
+  if (!actorUserId) {
+    throw new DemoOperationError("Actor required", "updateCallbackStatus");
+  }
+  requirePermission(state, actorUserId, "manage_callbacks");
   const nowIso = new Date().toISOString();
   const idx = state.callbacks.findIndex((c) => c.id === callbackId);
   if (idx === -1) {
@@ -714,7 +736,12 @@ export function assignCallbackSync(
   state: DemoState,
   callbackId: string,
   assignedToUserId: string,
+  actorUserId?: string,
 ): { state: DemoState; result: CallbackRequest } {
+  if (!actorUserId) {
+    throw new DemoOperationError("Actor required", "assignCallback");
+  }
+  requirePermission(state, actorUserId, "manage_callbacks");
   const idx = state.callbacks.findIndex((c) => c.id === callbackId);
   if (idx === -1) {
     throw new DemoOperationError("Callback not found", "assignCallback");
@@ -736,6 +763,7 @@ export function addCallbackNoteSync(
   authorUserId: string,
   body: string,
 ): { state: DemoState; result: CallbackRequest } {
+  requirePermission(state, authorUserId, "manage_callbacks");
   const idx = state.callbacks.findIndex((c) => c.id === callbackId);
   if (idx === -1) {
     throw new DemoOperationError("Callback not found", "addCallbackNote");
@@ -762,6 +790,7 @@ export function addAppointmentNoteSync(
   authorUserId: string,
   body: string,
 ): { state: DemoState; result: Appointment } {
+  requirePermission(state, authorUserId, "manage_appointments");
   const trimmed = body.trim();
   if (!trimmed) {
     throw new DemoOperationError("Note cannot be empty", "addAppointmentNote");
@@ -845,6 +874,10 @@ export function updateSettingsSync(
   patch: Partial<HospitalSettings>,
   actorUserId?: string,
 ): { state: DemoState; result: HospitalSettings } {
+  if (!actorUserId) {
+    throw new DemoOperationError("Actor required", "updateSettings");
+  }
+  requirePermission(state, actorUserId, "manage_settings");
   const nowIso = new Date().toISOString();
   const hospitalSettings = { ...state.hospitalSettings, ...patch };
   let next: DemoState = { ...state, hospitalSettings };
@@ -853,11 +886,375 @@ export function updateSettingsSync(
     {
       type: "settings_updated",
       actorUserId,
-      message: "Hospital settings updated (simulated persistence)",
+      message: "Hospital / AI settings updated (demo persistence)",
     },
     nowIso,
   );
   return { state: next, result: hospitalSettings };
+}
+
+export interface CreateDoctorInput {
+  displayName: string;
+  title: string;
+  departmentId: string;
+  bio?: string;
+  username: string;
+  password: string;
+  actorUserId: string;
+  serviceId?: string;
+  durationMinutes?: number;
+  feePaisa?: number;
+  bufferMinutes?: number;
+  workingDays?: number[];
+}
+
+export function createDoctorSync(
+  state: DemoState,
+  input: CreateDoctorInput,
+): { state: DemoState; result: { doctor: DemoState["doctors"][0]; user: DemoState["users"][0] } } {
+  requirePermission(state, input.actorUserId, "manage_staff");
+  const username = input.username.trim().toLowerCase();
+  const displayName = input.displayName.trim();
+  const title = input.title.trim();
+  const password = input.password.trim();
+
+  if (!displayName || !title || !username || !password) {
+    throw new DemoOperationError("Missing required doctor fields", "createDoctor");
+  }
+  if (!state.departments.some((d) => d.id === input.departmentId)) {
+    throw new DemoOperationError("Department not found", "createDoctor");
+  }
+  if (state.users.some((u) => u.username.toLowerCase() === username)) {
+    throw new DemoOperationError("Username already taken", "createDoctor");
+  }
+
+  const nowIso = new Date().toISOString();
+  const doctorId = id("doc");
+  const userId = id("user");
+
+  const user: DemoState["users"][0] = {
+    id: userId,
+    username,
+    displayName,
+    role: "doctor",
+    doctorId,
+    permissions: [...DOCTOR_PERMISSIONS],
+    active: true,
+    password,
+  };
+
+  const doctor: DemoState["doctors"][0] = {
+    id: doctorId,
+    userId,
+    displayName,
+    title,
+    departmentId: input.departmentId,
+    bio: input.bio?.trim() || undefined,
+    active: true,
+  };
+
+  let doctorServices = state.doctorServices;
+  if (input.serviceId) {
+    if (!state.services.some((s) => s.id === input.serviceId)) {
+      throw new DemoOperationError("Service not found", "createDoctor");
+    }
+    doctorServices = [
+      {
+        id: id("ds"),
+        doctorId,
+        serviceId: input.serviceId,
+        durationMinutes: input.durationMinutes ?? 30,
+        feePaisa: input.feePaisa ?? 300000,
+        bufferMinutes: input.bufferMinutes ?? 5,
+        workingPeriodIds: [],
+      },
+      ...doctorServices,
+    ];
+  }
+
+  const days = input.workingDays?.length
+    ? input.workingDays
+    : [1, 2, 3, 4, 5, 6];
+  const workingHours = [
+    ...days.map((dayOfWeek) => ({
+      id: id("wh"),
+      doctorId,
+      dayOfWeek,
+      startTime: "09:00",
+      endTime: "17:00",
+    })),
+    ...state.workingHours,
+  ];
+
+  let next: DemoState = {
+    ...state,
+    doctors: [doctor, ...state.doctors],
+    users: [user, ...state.users],
+    doctorServices,
+    workingHours,
+  };
+  next = pushActivity(
+    next,
+    {
+      type: "doctor_created",
+      actorUserId: input.actorUserId,
+      message: `Doctor profile created: ${displayName} (@${username})`,
+      entityType: "doctor",
+      entityId: doctorId,
+    },
+    nowIso,
+  );
+  return { state: next, result: { doctor, user } };
+}
+
+export function updateDoctorSync(
+  state: DemoState,
+  input: {
+    doctorId: string;
+    actorUserId: string;
+    displayName?: string;
+    title?: string;
+    departmentId?: string;
+    bio?: string;
+  },
+): { state: DemoState; result: DemoState["doctors"][0] } {
+  requirePermission(state, input.actorUserId, "manage_staff");
+  const idx = state.doctors.findIndex((d) => d.id === input.doctorId);
+  if (idx === -1) {
+    throw new DemoOperationError("Doctor not found", "updateDoctor");
+  }
+  if (
+    input.departmentId &&
+    !state.departments.some((d) => d.id === input.departmentId)
+  ) {
+    throw new DemoOperationError("Department not found", "updateDoctor");
+  }
+
+  const prev = state.doctors[idx];
+  const updated = {
+    ...prev,
+    displayName: input.displayName?.trim() || prev.displayName,
+    title: input.title?.trim() || prev.title,
+    departmentId: input.departmentId ?? prev.departmentId,
+    bio:
+      input.bio === undefined ? prev.bio : input.bio.trim() || undefined,
+  };
+  const doctors = [...state.doctors];
+  doctors[idx] = updated;
+
+  const users = state.users.map((u) =>
+    u.id === updated.userId
+      ? { ...u, displayName: updated.displayName }
+      : u,
+  );
+
+  const nowIso = new Date().toISOString();
+  let next: DemoState = { ...state, doctors, users };
+  next = pushActivity(
+    next,
+    {
+      type: "doctor_updated",
+      actorUserId: input.actorUserId,
+      message: `Doctor profile updated: ${updated.displayName}`,
+      entityType: "doctor",
+      entityId: updated.id,
+    },
+    nowIso,
+  );
+  return { state: next, result: updated };
+}
+
+export function setDoctorActiveSync(
+  state: DemoState,
+  input: { doctorId: string; active: boolean; actorUserId: string },
+): { state: DemoState; result: DemoState["doctors"][0] } {
+  requirePermission(state, input.actorUserId, "manage_staff");
+  const idx = state.doctors.findIndex((d) => d.id === input.doctorId);
+  if (idx === -1) {
+    throw new DemoOperationError("Doctor not found", "setDoctorActive");
+  }
+  const updated = { ...state.doctors[idx], active: input.active };
+  const doctors = [...state.doctors];
+  doctors[idx] = updated;
+  const users = state.users.map((u) =>
+    u.id === updated.userId ? { ...u, active: input.active } : u,
+  );
+  const nowIso = new Date().toISOString();
+  let next: DemoState = { ...state, doctors, users };
+  next = pushActivity(
+    next,
+    {
+      type: input.active ? "doctor_updated" : "doctor_deactivated",
+      actorUserId: input.actorUserId,
+      message: input.active
+        ? `Doctor reactivated: ${updated.displayName}`
+        : `Doctor deactivated: ${updated.displayName}`,
+      entityType: "doctor",
+      entityId: updated.id,
+    },
+    nowIso,
+  );
+  return { state: next, result: updated };
+}
+
+export function assignDoctorCredentialsSync(
+  state: DemoState,
+  input: {
+    doctorId: string;
+    username: string;
+    password: string;
+    actorUserId: string;
+  },
+): { state: DemoState; result: DemoState["users"][0] } {
+  requirePermission(state, input.actorUserId, "manage_staff");
+  const doctor = state.doctors.find((d) => d.id === input.doctorId);
+  if (!doctor) {
+    throw new DemoOperationError("Doctor not found", "assignDoctorCredentials");
+  }
+  const username = input.username.trim().toLowerCase();
+  const password = input.password.trim();
+  if (!username || !password) {
+    throw new DemoOperationError(
+      "Username and password required",
+      "assignDoctorCredentials",
+    );
+  }
+  if (
+    state.users.some(
+      (u) => u.username.toLowerCase() === username && u.id !== doctor.userId,
+    )
+  ) {
+    throw new DemoOperationError(
+      "Username already taken",
+      "assignDoctorCredentials",
+    );
+  }
+
+  const userIdx = state.users.findIndex((u) => u.id === doctor.userId);
+  if (userIdx === -1) {
+    throw new DemoOperationError(
+      "Linked user not found",
+      "assignDoctorCredentials",
+    );
+  }
+  const updated = {
+    ...state.users[userIdx],
+    username,
+    password,
+    active: true,
+  };
+  const users = [...state.users];
+  users[userIdx] = updated;
+  const nowIso = new Date().toISOString();
+  let next: DemoState = { ...state, users };
+  next = pushActivity(
+    next,
+    {
+      type: "staff_change_simulated",
+      actorUserId: input.actorUserId,
+      message: `Login assigned for ${doctor.displayName} (@${username})`,
+      entityType: "user",
+      entityId: updated.id,
+    },
+    nowIso,
+  );
+  return { state: next, result: updated };
+}
+
+export function upsertDoctorServiceSync(
+  state: DemoState,
+  input: {
+    doctorId: string;
+    serviceId: string;
+    durationMinutes: number;
+    feePaisa: number;
+    bufferMinutes: number;
+    actorUserId: string;
+  },
+): { state: DemoState; result: DemoState["doctorServices"][0] } {
+  requirePermission(state, input.actorUserId, "manage_staff");
+  if (!state.doctors.some((d) => d.id === input.doctorId)) {
+    throw new DemoOperationError("Doctor not found", "upsertDoctorService");
+  }
+  if (!state.services.some((s) => s.id === input.serviceId)) {
+    throw new DemoOperationError("Service not found", "upsertDoctorService");
+  }
+  const existingIdx = state.doctorServices.findIndex(
+    (ds) =>
+      ds.doctorId === input.doctorId && ds.serviceId === input.serviceId,
+  );
+  const row =
+    existingIdx >= 0
+      ? {
+          ...state.doctorServices[existingIdx],
+          durationMinutes: input.durationMinutes,
+          feePaisa: input.feePaisa,
+          bufferMinutes: input.bufferMinutes,
+        }
+      : {
+          id: id("ds"),
+          doctorId: input.doctorId,
+          serviceId: input.serviceId,
+          durationMinutes: input.durationMinutes,
+          feePaisa: input.feePaisa,
+          bufferMinutes: input.bufferMinutes,
+          workingPeriodIds: [],
+        };
+  const doctorServices = [...state.doctorServices];
+  if (existingIdx >= 0) doctorServices[existingIdx] = row;
+  else doctorServices.unshift(row);
+
+  const nowIso = new Date().toISOString();
+  let next: DemoState = { ...state, doctorServices };
+  next = pushActivity(
+    next,
+    {
+      type: "doctor_updated",
+      actorUserId: input.actorUserId,
+      message: `Service assignment updated for doctor ${input.doctorId}`,
+      entityType: "doctor",
+      entityId: input.doctorId,
+    },
+    nowIso,
+  );
+  return { state: next, result: row };
+}
+
+export function setDoctorWorkingHoursSync(
+  state: DemoState,
+  input: {
+    doctorId: string;
+    days: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
+    actorUserId: string;
+  },
+): { state: DemoState; result: DemoState["workingHours"] } {
+  requirePermission(state, input.actorUserId, "manage_staff");
+  if (!state.doctors.some((d) => d.id === input.doctorId)) {
+    throw new DemoOperationError("Doctor not found", "setDoctorWorkingHours");
+  }
+  const kept = state.workingHours.filter((h) => h.doctorId !== input.doctorId);
+  const created = input.days.map((d) => ({
+    id: id("wh"),
+    doctorId: input.doctorId,
+    dayOfWeek: d.dayOfWeek,
+    startTime: d.startTime,
+    endTime: d.endTime,
+  }));
+  const workingHours = [...created, ...kept];
+  const nowIso = new Date().toISOString();
+  let next: DemoState = { ...state, workingHours };
+  next = pushActivity(
+    next,
+    {
+      type: "doctor_updated",
+      actorUserId: input.actorUserId,
+      message: `Working hours updated for doctor ${input.doctorId}`,
+      entityType: "doctor",
+      entityId: input.doctorId,
+    },
+    nowIso,
+  );
+  return { state: next, result: created };
 }
 
 export function simulateStaffAccountChangeSync(
@@ -927,8 +1324,11 @@ async function runRead<T>(
   return fn(withReconcile(adapter.getState(), getDemoNow()));
 }
 
-export async function listDoctors(adapter: DemoStoreAdapter) {
-  return runRead(adapter, "listDoctors", listDoctorsSync);
+export async function listDoctors(
+  adapter: DemoStoreAdapter,
+  opts?: { includeInactive?: boolean },
+) {
+  return runRead(adapter, "listDoctors", (s) => listDoctorsSync(s, opts));
 }
 
 export async function getDoctor(adapter: DemoStoreAdapter, doctorId: string) {
@@ -1053,9 +1453,10 @@ export async function assignCallback(
   adapter: DemoStoreAdapter,
   callbackId: string,
   assignedToUserId: string,
+  actorUserId?: string,
 ) {
   return runMutation(adapter, "assignCallback", (s) =>
-    assignCallbackSync(s, callbackId, assignedToUserId),
+    assignCallbackSync(s, callbackId, assignedToUserId, actorUserId),
   );
 }
 
@@ -1130,6 +1531,60 @@ export async function updateSettings(
 ) {
   return runMutation(adapter, "updateSettings", (s) =>
     updateSettingsSync(s, patch, actorUserId),
+  );
+}
+
+export async function createDoctor(
+  adapter: DemoStoreAdapter,
+  input: CreateDoctorInput,
+) {
+  return runMutation(adapter, "createDoctor", (s) =>
+    createDoctorSync(s, input),
+  );
+}
+
+export async function updateDoctor(
+  adapter: DemoStoreAdapter,
+  input: Parameters<typeof updateDoctorSync>[1],
+) {
+  return runMutation(adapter, "updateDoctor", (s) =>
+    updateDoctorSync(s, input),
+  );
+}
+
+export async function setDoctorActive(
+  adapter: DemoStoreAdapter,
+  input: Parameters<typeof setDoctorActiveSync>[1],
+) {
+  return runMutation(adapter, "setDoctorActive", (s) =>
+    setDoctorActiveSync(s, input),
+  );
+}
+
+export async function assignDoctorCredentials(
+  adapter: DemoStoreAdapter,
+  input: Parameters<typeof assignDoctorCredentialsSync>[1],
+) {
+  return runMutation(adapter, "assignDoctorCredentials", (s) =>
+    assignDoctorCredentialsSync(s, input),
+  );
+}
+
+export async function upsertDoctorService(
+  adapter: DemoStoreAdapter,
+  input: Parameters<typeof upsertDoctorServiceSync>[1],
+) {
+  return runMutation(adapter, "upsertDoctorService", (s) =>
+    upsertDoctorServiceSync(s, input),
+  );
+}
+
+export async function setDoctorWorkingHours(
+  adapter: DemoStoreAdapter,
+  input: Parameters<typeof setDoctorWorkingHoursSync>[1],
+) {
+  return runMutation(adapter, "setDoctorWorkingHours", (s) =>
+    setDoctorWorkingHoursSync(s, input),
   );
 }
 

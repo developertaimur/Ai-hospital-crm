@@ -38,8 +38,9 @@ interface BookingWizardProps {
 
 export function BookingWizard({ state, onComplete }: BookingWizardProps) {
   const actorUserId = useActorUserId();
+  const activeDoctors = state.doctors.filter((d) => d.active !== false);
   const [step, setStep] = useState(0);
-  const [doctorId, setDoctorId] = useState(state.doctors[0]?.id ?? "");
+  const [doctorId, setDoctorId] = useState(activeDoctors[0]?.id ?? "");
   const [serviceId, setServiceId] = useState("");
   const [dateKey, setDateKey] = useState(toKarachiDateKey(getDemoNow().toISOString()));
   const [slots, setSlots] = useState<string[]>([]);
@@ -158,7 +159,7 @@ export function BookingWizard({ state, onComplete }: BookingWizardProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {state.doctors.map((d) => (
+                {activeDoctors.map((d) => (
                   <SelectItem key={d.id} value={d.id}>
                     {d.displayName}
                   </SelectItem>

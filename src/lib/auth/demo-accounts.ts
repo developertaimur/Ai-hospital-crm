@@ -5,7 +5,7 @@
  * Production must use server-side auth, hashed credentials, and session management.
  */
 
-import type { Permission, Role, SessionUser } from "@/lib/types";
+import type { Permission, Role, SessionUser, User } from "@/lib/types";
 
 export interface DemoAccount {
   username: string;
@@ -17,7 +17,7 @@ export interface DemoAccount {
   permissions: Permission[];
 }
 
-const ALL_ADMIN_PERMISSIONS: Permission[] = [
+export const ALL_ADMIN_PERMISSIONS: Permission[] = [
   "view_dashboard",
   "manage_appointments",
   "manage_patients",
@@ -32,20 +32,17 @@ const ALL_ADMIN_PERMISSIONS: Permission[] = [
   "view_activity",
 ];
 
-const DOCTOR_PERMISSIONS: Permission[] = [
+export const DOCTOR_PERMISSIONS: Permission[] = [
   "view_dashboard",
   "view_own_schedule",
   "update_arrival",
   "view_activity",
 ];
 
-const RECEPTION_PERMISSIONS: Permission[] = [
+/** AI Reception is view-only: inbound calls, statuses, and summaries. */
+export const RECEPTION_PERMISSIONS: Permission[] = [
   "view_dashboard",
-  "manage_appointments",
-  "manage_patients",
-  "manage_callbacks",
   "view_calls",
-  "verify_payment",
   "view_activity",
 ];
 
@@ -109,14 +106,44 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
   },
 ];
 
+/**
+ * Authenticate against dynamic demo users first, then built-in DEMO_ACCOUNTS.
+ * Pass `users` from hydrated DemoState when available.
+ */
 export function authenticate(
   username: string,
   password: string,
+  users?: User[],
 ): SessionUser | null {
+  if (users?.length) {
+    const dynamic = users.find(
+      (u) =>
+        u.active &&
+        u.username === username &&
+        !!u.password &&
+        u.password === password,
+    );
+    if (dynamic) {
+      return {
+        userId: dynamic.id,
+        username: dynamic.username,
+        role: dynamic.role,
+        doctorId: dynamic.doctorId,
+      };
+    }
+  }
+
   const account = DEMO_ACCOUNTS.find(
     (a) => a.username === username && a.password === password,
   );
   if (!account) return null;
+
+  // Prefer linked demo-state user when present (may be deactivated).
+  if (users?.length) {
+    const linked = users.find((u) => u.id === account.userId);
+    if (linked && !linked.active) return null;
+  }
+
   return {
     userId: account.userId,
     username: account.username,
@@ -132,9 +159,49 @@ export function hasPermission(
   return permissions.includes(required);
 }
 
-export function getPermissionsForUser(userId: string): Permission[] {
+export function getPermissionsForUser(
+  userId: string,
+  users?: User[],
+): Permission[] {
+  const fromState = users?.find((u) => u.id === userId);
+  if (fromState) return fromState.permissions;
   const account = DEMO_ACCOUNTS.find((a) => a.userId === userId);
   return account?.permissions ?? [];
+}
+
+export function listLoginAccounts(users?: User[]): Array<{
+  username: string;
+  password: string;
+  role: Role;
+  displayName: string;
+  source: "seed" | "admin";
+}> {
+  const rows: Array<{
+    username: string;
+    password: string;
+    role: Role;
+    displayName: string;
+    source: "seed" | "admin";
+  }> = DEMO_ACCOUNTS.map((a) => ({
+    username: a.username,
+    password: a.password,
+    role: a.role,
+    displayName: a.displayName,
+    source: "seed",
+  }));
+
+  for (const u of users ?? []) {
+    if (!u.active || !u.password) continue;
+    if (rows.some((r) => r.username === u.username)) continue;
+    rows.push({
+      username: u.username,
+      password: u.password,
+      role: u.role,
+      displayName: u.displayName,
+      source: "admin",
+    });
+  }
+  return rows;
 }
 
 export function getHomePath(role: Role): string {

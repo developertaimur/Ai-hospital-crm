@@ -48,17 +48,18 @@ Demo usernames/passwords live in `.env` (`NEXT_PUBLIC_DEMO_*`). Copy from `.env.
 | `admin`          | `admin123`     | Admin     | Full demo permissions          |
 | `doctor.ahmed`   | `doctor123`    | Doctor    | Dr. Ahmed Hassan (cardiology)  |
 | `doctor.khan`    | `doctor123`    | Doctor    | Dr. Imran Khan (orthopedics)   |
-| `reception.sara` | `reception123` | Reception | Booking & payment verification |
+| `reception.sara` | `reception123` | Reception | AI inbound-calls monitor (view-only) |
 
 Additional doctor accounts exist in seed data for schedule views; only the accounts above are on the login screen.
 
 ## Core workflows
 
-1. **Book** — Reception selects doctor, service, and slot → reservation is **awaiting payment** with a time-limited hold.
-2. **Pay (claim)** — Staff or patient may submit a payment *claim*; claims do **not** confirm the appointment.
-3. **Verify ≥ 50%** — A user with `verify_payment` records **verified** payment. When verified total meets the **50% threshold**, the booking is **confirmed** and the expiry timer is cleared.
-4. **Expiry** — Unpaid holds expire; partial verified amounts may require manual resolution.
-5. **Arrival** — Doctors update arrival/consultation status on confirmed visits.
+1. **Inbound AI call (Reception)** — Reception monitors simulated inbound calls (including those without bookings), transcripts, summaries, and statuses — **no** confirm/cancel/reschedule/payment actions.
+2. **Book** — Admin creates a provisional reservation → **awaiting payment** with a time-limited hold (AI may also seed provisional holds).
+3. **Pay (claim)** — A payment *claim* may be submitted; claims do **not** confirm the appointment.
+4. **Verify ≥ 50%** — **Admin** (`verify_payment`) records **verified** payment. When verified total meets the **50% threshold**, the booking is **confirmed** and the expiry timer is cleared.
+5. **Expiry** — Unpaid holds expire; partial verified amounts may require manual resolution.
+6. **Arrival** — Doctors see **confirmed** queue only and update arrival/consultation status.
 
 Domain logic lives under `src/lib/` (mock repository, slots, expiry, money, auth helpers). Tests cover these rules in `src/**/*.test.ts`.
 

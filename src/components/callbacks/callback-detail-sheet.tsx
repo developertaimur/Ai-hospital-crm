@@ -26,6 +26,10 @@ import { formatKarachi } from "@/lib/time";
 import type { CallbackRequest, DemoState } from "@/lib/types";
 import { doctorName, patientName, userDisplayName } from "@/lib/display/lookups";
 import { useActorUserId } from "@/lib/hooks/use-effective-role";
+import {
+  getPermissionsForUser,
+  hasPermission,
+} from "@/lib/auth/demo-accounts";
 import Link from "next/link";
 
 interface CallbackDetailSheetProps {
@@ -48,8 +52,12 @@ export function CallbackDetailSheet({
 
   if (!callback) return null;
 
+  const canManage =
+    !!actorUserId &&
+    hasPermission(getPermissionsForUser(actorUserId), "manage_callbacks");
+
   const staff = state.users.filter(
-    (u) => u.role === "reception" || u.role === "admin",
+    (u) => u.role === "admin" || u.role === "reception",
   );
 
   async function run(action: () => Promise<void>) {
@@ -149,136 +157,155 @@ export function CallbackDetailSheet({
             </div>
           ) : null}
 
-          <div className="space-y-2 border-t border-border pt-4">
-            <Label htmlFor="cb-assign">Assign (simulated)</Label>
-            <Select value={assignUserId} onValueChange={setAssignUserId}>
-              <SelectTrigger id="cb-assign">
-                <SelectValue placeholder="Select staff" />
-              </SelectTrigger>
-              <SelectContent>
-                {staff.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.displayName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              disabled={!assignUserId || busy}
-              onClick={() =>
-                run(async () => {
-                  await withDemoRepo((a) =>
-                    repo.assignCallback(a, callback.id, assignUserId),
-                  );
-                  toast({ title: "Assigned (simulated)" });
-                })
-              }
-            >
-              Assign
-            </Button>
-          </div>
+          {canManage ? (
+            <>
+              <div className="space-y-2 border-t border-border pt-4">
+                <Label htmlFor="cb-assign">Assign (simulated)</Label>
+                <Select value={assignUserId} onValueChange={setAssignUserId}>
+                  <SelectTrigger id="cb-assign">
+                    <SelectValue placeholder="Select staff" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {staff.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={!assignUserId || busy || !actorUserId}
+                  onClick={() =>
+                    run(async () => {
+                      await withDemoRepo((a) =>
+                        repo.assignCallback(
+                          a,
+                          callback.id,
+                          assignUserId,
+                          actorUserId!,
+                        ),
+                      );
+                      toast({ title: "Assigned (simulated)" });
+                    })
+                  }
+                >
+                  Assign
+                </Button>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="cb-note">Add note</Label>
-            <Textarea
-              id="cb-note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={3}
-            />
-            <Button
-              type="button"
-              size="sm"
-              disabled={!note.trim() || !actorUserId || busy}
-              onClick={() =>
-                run(async () => {
-                  await withDemoRepo((a) =>
-                    repo.addCallbackNote(a, callback.id, actorUserId!, note.trim()),
-                  );
-                  setNote("");
-                  toast({ title: "Note added" });
-                })
-              }
-            >
-              Save note
-            </Button>
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="cb-note">Add note</Label>
+                <Textarea
+                  id="cb-note"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  rows={3}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!note.trim() || !actorUserId || busy}
+                  onClick={() =>
+                    run(async () => {
+                      await withDemoRepo((a) =>
+                        repo.addCallbackNote(
+                          a,
+                          callback.id,
+                          actorUserId!,
+                          note.trim(),
+                        ),
+                      );
+                      setNote("");
+                      toast({ title: "Note added" });
+                    })
+                  }
+                >
+                  Save note
+                </Button>
+              </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              disabled={busy}
-              onClick={() =>
-                run(async () => {
-                  await withDemoRepo((a) =>
-                    repo.updateCallbackStatus(
-                      a,
-                      callback.id,
-                      "in_progress",
-                      actorUserId,
-                    ),
-                  );
-                  toast({ title: "Simulated outbound call started" });
-                })
-              }
-            >
-              Simulate call
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              disabled={busy}
-              onClick={() =>
-                run(async () => {
-                  await withDemoRepo((a) =>
-                    repo.updateCallbackStatus(
-                      a,
-                      callback.id,
-                      "in_progress",
-                      actorUserId,
-                    ),
-                  );
-                  toast({ title: "Follow-up logged (simulated)" });
-                })
-              }
-            >
-              Log follow-up
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={busy}
-              onClick={() =>
-                run(async () => {
-                  await withDemoRepo((a) =>
-                    repo.updateCallbackStatus(
-                      a,
-                      callback.id,
-                      "completed",
-                      actorUserId,
-                    ),
-                  );
-                  toast({
-                    title: "Callback completed",
-                    description: "Payment status unchanged.",
-                  });
-                })
-              }
-            >
-              Complete
-            </Button>
-            <Button type="button" size="sm" variant="secondary" asChild>
-              <Link href="/reception/new-appointment">
-                Open appointment booking
-              </Link>
-            </Button>
-          </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() =>
+                    run(async () => {
+                      await withDemoRepo((a) =>
+                        repo.updateCallbackStatus(
+                          a,
+                          callback.id,
+                          "in_progress",
+                          actorUserId,
+                        ),
+                      );
+                      toast({ title: "Simulated outbound call started" });
+                    })
+                  }
+                >
+                  Simulate call
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() =>
+                    run(async () => {
+                      await withDemoRepo((a) =>
+                        repo.updateCallbackStatus(
+                          a,
+                          callback.id,
+                          "in_progress",
+                          actorUserId,
+                        ),
+                      );
+                      toast({ title: "Follow-up logged (simulated)" });
+                    })
+                  }
+                >
+                  Log follow-up
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() =>
+                    run(async () => {
+                      await withDemoRepo((a) =>
+                        repo.updateCallbackStatus(
+                          a,
+                          callback.id,
+                          "completed",
+                          actorUserId,
+                        ),
+                      );
+                      toast({
+                        title: "Callback completed",
+                        description: "Payment status unchanged.",
+                      });
+                    })
+                  }
+                >
+                  Complete
+                </Button>
+                <Button type="button" size="sm" variant="secondary" asChild>
+                  <Link href="/admin/new-appointment">
+                    Open appointment booking
+                  </Link>
+                </Button>
+              </div>
+            </>
+          ) : (
+            <p className="rounded-lg border border-dashed border-border bg-background px-3 py-3 text-xs text-muted">
+              Callback management (assign, notes, complete) is Admin-only.
+              Status above is view-only for this role.
+            </p>
+          )}
         </div>
       </SheetContent>
     </Sheet>

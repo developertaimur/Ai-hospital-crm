@@ -31,8 +31,19 @@ describe("role navigation and permissions", () => {
     expect(hasPermission(perms, "view_own_schedule")).toBe(true);
   });
 
-  it("reception can verify payments", () => {
+  it("reception is view-only (no verify/manage permissions)", () => {
     const perms = getPermissionsForUser("user-reception-sara");
+    expect(hasPermission(perms, "view_calls")).toBe(true);
+    expect(hasPermission(perms, "view_dashboard")).toBe(true);
+    expect(hasPermission(perms, "verify_payment")).toBe(false);
+    expect(hasPermission(perms, "manage_appointments")).toBe(false);
+    expect(hasPermission(perms, "manage_callbacks")).toBe(false);
+  });
+
+  it("admin retains management permissions", () => {
+    const perms = getPermissionsForUser("user-admin");
     expect(hasPermission(perms, "verify_payment")).toBe(true);
+    expect(hasPermission(perms, "manage_appointments")).toBe(true);
+    expect(hasPermission(perms, "manage_callbacks")).toBe(true);
   });
 });

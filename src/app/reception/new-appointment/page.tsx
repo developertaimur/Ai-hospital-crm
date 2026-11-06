@@ -1,19 +1,17 @@
 "use client";
 
-import { BookingWizard } from "@/components/appointments/booking-wizard";
-import { useDemoReady } from "@/lib/hooks/use-demo-ready";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function ReceptionNewAppointmentPage() {
-  const { ready, state } = useDemoReady();
-
-  if (!ready || !state) {
-    return <p className="text-sm text-muted">Loading…</p>;
-  }
-
+/** Legacy route — booking creation is Admin-only. */
+export default function ReceptionNewAppointmentRedirect() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/reception");
+  }, [router]);
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-2xl font-semibold">New appointment</h1>
-      <BookingWizard state={state} />
-    </div>
+    <p className="text-sm text-muted">
+      New appointments are Admin-only. Redirecting to Incoming Calls…
+    </p>
   );
 }

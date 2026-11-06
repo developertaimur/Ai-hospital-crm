@@ -30,7 +30,7 @@ export default function DoctorWeekPage() {
   }
 
   const appointments = state.appointments.filter((a) => {
-    if (a.doctorId !== doctorId || a.status === "cancelled") return false;
+    if (a.doctorId !== doctorId || a.status !== "confirmed") return false;
     const key = toKarachiDateKey(a.scheduledStartIso);
     return weekKeys.includes(key);
   });
@@ -39,7 +39,7 @@ export default function DoctorWeekPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">This week</h1>
       <p className="text-sm text-muted">
-        {weekKeys[0]} → {weekKeys[6]} (Karachi)
+        Confirmed queue · {weekKeys[0]} → {weekKeys[6]} (Karachi)
       </p>
       <AppointmentTable
         state={state}
