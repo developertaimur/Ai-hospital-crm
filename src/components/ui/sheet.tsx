@@ -69,7 +69,7 @@ function SheetHeader({
   return (
     <div
       className={cn(
-        "flex flex-col gap-1.5 border-b border-border bg-surface px-6 pb-4 pt-6 pr-14",
+        "flex flex-col gap-1.5 border-b border-border bg-surface px-4 pb-4 pt-5 pr-12 sm:px-6 sm:pt-6 sm:pr-14",
         className,
       )}
       {...props}

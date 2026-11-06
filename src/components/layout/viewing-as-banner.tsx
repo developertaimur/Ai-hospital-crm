@@ -12,7 +12,7 @@ export function ViewingAsBanner() {
   if (!session || session.role !== "admin" || !viewingAs) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-primary/20 bg-primary/5 px-4 py-2 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-primary/20 bg-primary/5 px-3 py-2 text-sm sm:px-4">
       <span>
         Viewing as <strong className="capitalize">{viewingAs}</strong> (admin
         preview)

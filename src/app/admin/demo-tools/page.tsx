@@ -47,7 +47,7 @@ export default function AdminDemoToolsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Demo tools</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Demo tools</h1>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Demo clock</CardTitle>
@@ -73,7 +73,7 @@ export default function AdminDemoToolsPage() {
                 setViewingAs(v === "none" ? null : (v as Role))
               }
             >
-              <SelectTrigger id="view-as" className="w-40">
+              <SelectTrigger id="view-as" className="w-full sm:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -32,7 +32,7 @@ export default function DoctorTodayPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Today</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Today</h1>
       <p className="text-sm text-muted">
         Confirmed queue only · arrival lifecycle · payment verification is
         Admin-only.

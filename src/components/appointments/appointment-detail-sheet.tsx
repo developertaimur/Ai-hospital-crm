@@ -167,7 +167,7 @@ export function AppointmentDetailSheet({
             </div>
           </SheetHeader>
 
-          <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+          <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"

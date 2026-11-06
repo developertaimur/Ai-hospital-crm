@@ -37,7 +37,7 @@ export default function DoctorWeekPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">This week</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">This week</h1>
       <p className="text-sm text-muted">
         Confirmed queue · {weekKeys[0]} → {weekKeys[6]} (Karachi)
       </p>

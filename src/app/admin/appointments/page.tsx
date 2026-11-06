@@ -42,8 +42,8 @@ export default function AdminAppointmentsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Appointments</h1>
-      <div className="grid gap-3 rounded-lg border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-5">
+      <h1 className="text-xl font-semibold sm:text-2xl">Appointments</h1>
+      <div className="grid gap-3 rounded-xl border border-border bg-surface p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-3 xl:grid-cols-5">
         <div className="space-y-1">
           <Label htmlFor="f-doctor">Doctor</Label>
           <Select value={doctorId} onValueChange={setDoctorId}>

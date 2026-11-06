@@ -534,7 +534,7 @@ export default function AdminDoctorsPage() {
                       ))}
                   </TableBody>
                 </Table>
-                <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
                   <Select value={svcId} onValueChange={setSvcId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Service" />

@@ -50,7 +50,7 @@ export default function AdminCallsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Calls</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Calls</h1>
       <p className="text-sm text-muted">
         Simulated call records from demo seed ({calls.length} total).
       </p>

@@ -65,7 +65,7 @@ export default function AdminStaffPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Staff</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Staff</h1>
       <p className="text-sm text-muted">
         Doctor create / login assignment lives on{" "}
         <Link href="/admin/doctors" className="text-primary hover:underline">
@@ -118,25 +118,27 @@ export default function AdminStaffPage() {
                   {u.active ? "Active" : "Inactive"}
                 </Badge>
               </TableCell>
-              <TableCell className="space-x-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => void toggleActive(u.id, u.active)}
-                >
-                  {u.active ? "Disable" : "Enable"}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  disabled={busy || !newName.trim()}
-                  onClick={() => void rename(u.id)}
-                >
-                  Rename
-                </Button>
+              <TableCell>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => void toggleActive(u.id, u.active)}
+                  >
+                    {u.active ? "Disable" : "Enable"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={busy || !newName.trim()}
+                    onClick={() => void rename(u.id)}
+                  >
+                    Rename
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

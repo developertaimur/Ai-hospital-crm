@@ -95,7 +95,7 @@ export function InboundCallDetailSheet({
           </div>
         </SheetHeader>
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+        <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           <section className="rounded-xl border border-border bg-background/60 p-4 shadow-sm">
             <h3 className="mb-3 text-sm font-semibold text-foreground">
               Patient / caller details

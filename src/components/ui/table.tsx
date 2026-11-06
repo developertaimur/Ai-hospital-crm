@@ -6,9 +6,12 @@ function Table({
   ...props
 }: React.HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="relative w-full overflow-auto">
+    <div className="relative w-full max-w-full overflow-x-auto overscroll-x-contain rounded-xl [-webkit-overflow-scrolling:touch]">
       <table
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn(
+          "w-full min-w-[32rem] caption-bottom text-sm sm:min-w-[36rem]",
+          className,
+        )}
         {...props}
       />
     </div>
@@ -53,7 +56,7 @@ function TableHead({
   return (
     <th
       className={cn(
-        "h-10 px-3 text-left align-middle font-medium text-muted [&:has([role=checkbox])]:pr-0",
+        "h-10 whitespace-nowrap px-2 text-left align-middle font-medium text-muted sm:px-3 [&:has([role=checkbox])]:pr-0",
         className,
       )}
       {...props}
@@ -67,7 +70,10 @@ function TableCell({
 }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={cn("p-3 align-middle [&:has([role=checkbox])]:pr-0", className)}
+      className={cn(
+        "p-2 align-middle sm:p-3 [&:has([role=checkbox])]:pr-0",
+        className,
+      )}
       {...props}
     />
   );

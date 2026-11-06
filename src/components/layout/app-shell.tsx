@@ -23,7 +23,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store/auth-store";
@@ -83,12 +83,26 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  /** Path the drawer was opened on — auto-closes when the route changes. */
+  const [mobileMenuPath, setMobileMenuPath] = useState<string | null>(null);
+  const mobileOpen = mobileMenuPath === pathname;
+  const closeMobile = () => setMobileMenuPath(null);
+  const toggleMobile = () =>
+    setMobileMenuPath((p) => (p === pathname ? null : pathname));
   const session = useAuthStore((s) => s.session);
   const logout = useAuthStore((s) => s.logout);
   const displayName =
     DEMO_ACCOUNTS.find((a) => a.userId === session?.userId)?.displayName ??
     session?.username;
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileMenuPath(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
 
   const navContent = (
     <nav className="flex flex-col gap-1.5 p-3" aria-label="Main">
@@ -102,7 +116,7 @@ export function AppShell({
           <Link
             key={item.href}
             href={item.href}
-            onClick={() => setMobileOpen(false)}
+            onClick={closeMobile}
             className={cn(
               "group relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
               active
@@ -133,7 +147,7 @@ export function AppShell({
       {navExtra ? (
         <div
           className="mt-2 border-t border-border/80 pt-3"
-          onClick={() => setMobileOpen(false)}
+          onClick={closeMobile}
         >
           {navExtra}
         </div>
@@ -167,7 +181,7 @@ export function AppShell({
   );
 
   const userFooter = (
-    <div className="mt-auto border-t border-border/80 p-3">
+    <div className="border-t border-border/80 p-3">
       <div className="rounded-xl border border-border bg-background/80 p-3 shadow-sm">
         <div className="flex items-center gap-2.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
@@ -200,24 +214,25 @@ export function AppShell({
   );
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col overflow-x-hidden">
       <ViewingAsBanner />
-      <div className="flex flex-1">
+      <div className="flex min-w-0 flex-1">
         <aside className="hidden w-60 shrink-0 border-r border-border bg-surface md:flex md:flex-col">
           {brandBlock}
           <div className="flex-1 overflow-y-auto">{navContent}</div>
-          {userFooter}
+          <div className="mt-auto">{userFooter}</div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex items-center gap-2 border-b border-border bg-surface px-4 py-3 md:hidden">
+        <div className="relative flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-40 flex items-center gap-1.5 border-b border-border bg-surface/95 px-2 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:gap-2 sm:px-4 sm:py-3 md:hidden">
             <Button
               type="button"
               variant="ghost"
               size="icon"
+              className="shrink-0"
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav"
-              onClick={() => setMobileOpen((o) => !o)}
+              onClick={toggleMobile}
             >
               {mobileOpen ? <X /> : <Menu />}
               <span className="sr-only">Toggle menu</span>
@@ -236,8 +251,21 @@ export function AppShell({
             <Button
               type="button"
               variant="ghost"
+              size="icon"
+              className="shrink-0 text-muted hover:text-destructive sm:hidden"
+              aria-label="Sign out"
+              onClick={() => {
+                logout();
+                router.push("/login");
+              }}
+            >
+              <LogOut className="size-4" aria-hidden />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
               size="sm"
-              className="shrink-0 gap-1.5 text-muted hover:text-destructive"
+              className="hidden shrink-0 gap-1.5 text-muted hover:text-destructive sm:inline-flex"
               onClick={() => {
                 logout();
                 router.push("/login");
@@ -247,16 +275,28 @@ export function AppShell({
               Sign out
             </Button>
           </header>
+
           {mobileOpen ? (
-            <div
-              id="mobile-nav"
-              className="border-b border-border bg-surface md:hidden"
-            >
-              {navContent}
-              {userFooter}
-            </div>
+            <>
+              <button
+                type="button"
+                aria-label="Close menu"
+                className="fixed inset-0 z-40 bg-slate-900/40 md:hidden"
+                onClick={closeMobile}
+              />
+              <div
+                id="mobile-nav"
+                className="absolute inset-x-0 top-full z-50 max-h-[min(78dvh,calc(100dvh-3.5rem))] overflow-y-auto border-b border-border bg-surface shadow-lg md:hidden"
+              >
+                {navContent}
+                {userFooter}
+              </div>
+            </>
           ) : null}
-          <main className="flex-1 p-4 md:p-6">{children}</main>
+
+          <main className="min-w-0 flex-1 overflow-x-hidden p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 md:p-6">
+            {children}
+          </main>
         </div>
       </div>
     </div>

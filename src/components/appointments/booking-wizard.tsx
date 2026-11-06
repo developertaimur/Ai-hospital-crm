@@ -229,7 +229,7 @@ export function BookingWizard({ state, onComplete }: BookingWizardProps) {
 
         {step === 4 ? (
           <div className="space-y-3">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 size="sm"
@@ -314,7 +314,7 @@ export function BookingWizard({ state, onComplete }: BookingWizardProps) {
           </dl>
         ) : null}
 
-        <div className="flex justify-between pt-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
           <Button
             type="button"
             variant="secondary"

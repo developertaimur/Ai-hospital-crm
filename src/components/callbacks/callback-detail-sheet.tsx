@@ -83,7 +83,7 @@ export function CallbackDetailSheet({
           <SheetTitle>{patientName(state, callback.patientId)}</SheetTitle>
           <SheetDescription>Callback {callback.id}</SheetDescription>
         </SheetHeader>
-        <div className="mt-4 space-y-4 px-6 text-sm">
+        <div className="mt-4 space-y-4 px-4 text-sm sm:px-6">
           <StatusBadge status={callback.status} />
           <dl className="grid gap-2">
             <div>

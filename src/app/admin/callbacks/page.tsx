@@ -27,7 +27,7 @@ export default function AdminCallbacksPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Callbacks</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Callbacks</h1>
       <Table>
         <TableHeader>
           <TableRow>

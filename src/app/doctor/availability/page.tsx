@@ -172,20 +172,21 @@ export default function DoctorAvailabilityPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {DAY_NAMES.map((name, day) => {
             const active = workingDaySet.has(day);
             return (
               <div
                 key={name}
                 className={cn(
-                  "rounded-xl border px-1 py-2 text-center text-[11px] font-semibold sm:text-xs",
+                  "rounded-lg border px-0.5 py-2 text-center text-[10px] font-semibold sm:rounded-xl sm:px-1 sm:text-xs",
                   active
                     ? "border-primary/25 bg-primary/10 text-primary"
                     : "border-border bg-background text-muted",
                 )}
               >
-                {name}
+                <span className="sm:hidden">{name.slice(0, 1)}</span>
+                <span className="hidden sm:inline">{name}</span>
               </div>
             );
           })}

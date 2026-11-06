@@ -29,7 +29,7 @@ export function IncomingCallPopup() {
       }}
     >
       <DialogContent className="max-w-md overflow-hidden border-primary/20 p-0 sm:rounded-2xl">
-        <div className="relative bg-[radial-gradient(ellipse_at_top,_rgba(15,118,110,0.18),_transparent_65%)] px-6 pb-6 pt-7">
+        <div className="relative bg-[radial-gradient(ellipse_at_top,_rgba(15,118,110,0.18),_transparent_65%)] px-4 pb-5 pt-6 sm:px-6 sm:pb-6 sm:pt-7">
           <div className="mb-5 flex justify-center">
             <span className="relative flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30">
               <span className="absolute inset-0 animate-ping rounded-full bg-primary/35" />

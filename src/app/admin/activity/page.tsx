@@ -20,7 +20,7 @@ export default function AdminActivityPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Activity</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Activity</h1>
       <Table>
         <TableHeader>
           <TableRow>

@@ -72,7 +72,7 @@ export default function ReceptionBookingsStatusPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           Bookings status
         </h1>
         <p className="text-sm text-muted">

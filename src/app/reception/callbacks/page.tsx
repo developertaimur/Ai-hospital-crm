@@ -28,7 +28,7 @@ export default function ReceptionCallbacksStatusPage() {
   return (
     <div className="space-y-4">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">Callbacks status</h1>
+        <h1 className="text-xl font-semibold sm:text-2xl">Callbacks status</h1>
         <p className="text-sm text-muted">
           View-only · demo fictional data. Assignment and completion are
           Admin-only.
