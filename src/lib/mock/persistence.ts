@@ -2,7 +2,7 @@ import { SCHEMA_VERSION, type DemoState } from "@/lib/types";
 import { createSeedState } from "@/lib/mock/seed";
 import { getDemoNow } from "@/lib/time";
 
-export const STORAGE_KEY = "lci-hospital-crm-demo-v4";
+export const STORAGE_KEY = "lci-hospital-crm-demo-v6";
 
 export function loadState(): DemoState | null {
   if (typeof window === "undefined") return null;

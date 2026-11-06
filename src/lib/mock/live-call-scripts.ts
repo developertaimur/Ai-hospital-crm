@@ -27,13 +27,13 @@ export const INCOMING_CALL_SCRIPTS: IncomingCallScript[] = [
     patientLine:
       "Hi — I need a cardiology consult this week. Can you hold a slot for me?",
     aiLine:
-      "I’ve placed a provisional hold with Dr. Ahmed Hassan. Admin will confirm after payment verification.",
+      "I’ve placed a provisional hold with Dr. Muhammad Taimur. Admin will confirm after payment verification.",
     summary:
       "Caller requested cardiology consult. AI created a provisional reservation and explained payment confirmation is Admin-only.",
     stepDetails: {
       greeting: "AI receptionist answered in English",
       language_detected: "English",
-      collecting_intent: "Cardiology consultation · Dr. Ahmed Hassan",
+      collecting_intent: "Cardiology consultation · Dr. Muhammad Taimur",
       checking_availability: "Matching open demo slots",
       outcome: "Provisional reservation created (demo)",
     },

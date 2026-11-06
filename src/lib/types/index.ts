@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 4 as const;
+export const SCHEMA_VERSION = 6 as const;
 
 export type Role = "admin" | "doctor" | "reception";
 

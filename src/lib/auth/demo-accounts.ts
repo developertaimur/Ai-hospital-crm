@@ -63,14 +63,14 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     username: envOr(
       "NEXT_PUBLIC_DEMO_DOCTOR_AHMED_USERNAME",
-      "doctor.ahmed",
+      "doctor.taimur",
     ),
     password: envOr(
       "NEXT_PUBLIC_DEMO_DOCTOR_AHMED_PASSWORD",
       "doctor123",
     ),
     userId: "user-doc-ahmed",
-    displayName: "Dr. Ahmed Hassan",
+    displayName: "Dr. Muhammad Taimur",
     role: "doctor",
     doctorId: "doc-ahmed",
     permissions: DOCTOR_PERMISSIONS,

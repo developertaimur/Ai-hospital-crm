@@ -46,7 +46,7 @@ Demo usernames/passwords live in `.env` (`NEXT_PUBLIC_DEMO_*`). Copy from `.env.
 | Username         | Password       | Role      | Notes                          |
 |------------------|----------------|-----------|--------------------------------|
 | `admin`          | `admin123`     | Admin     | Full demo permissions          |
-| `doctor.ahmed`   | `doctor123`    | Doctor    | Dr. Ahmed Hassan (cardiology)  |
+| `doctor.taimur`  | `doctor123`    | Doctor    | Dr. Muhammad Taimur (cardiology) |
 | `doctor.khan`    | `doctor123`    | Doctor    | Dr. Imran Khan (orthopedics)   |
 | `reception.sara` | `reception123` | Reception | AI inbound-calls monitor (view-only) |
 
