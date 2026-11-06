@@ -126,7 +126,7 @@ export function CallbackDetailSheet({
               <dt className="text-muted">Transcript</dt>
               <dd>
                 {callback.transcriptUnavailable
-                  ? "Unavailable in demo"
+                  ? "Unavailable"
                   : "Not stored"}
               </dd>
             </div>

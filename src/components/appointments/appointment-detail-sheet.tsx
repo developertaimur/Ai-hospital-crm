@@ -377,7 +377,7 @@ export function AppointmentDetailSheet({
                   {call.patientTranscript || call.aiTranscript ? (
                     <div className="space-y-2 border-t border-border pt-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                        Patient / AI transcript (demo)
+                        Patient / AI transcript
                       </p>
                       {call.patientTranscript ? (
                         <p className="whitespace-pre-wrap rounded-lg bg-background p-3 text-sm">
@@ -484,7 +484,7 @@ export function AppointmentDetailSheet({
                     value={noteDraft}
                     onChange={(e) => setNoteDraft(e.target.value)}
                     rows={3}
-                    placeholder="Staff note (demo — fictional data only)"
+                    placeholder="Staff note"
                   />
                   <div className="flex flex-wrap gap-2">
                     <Button

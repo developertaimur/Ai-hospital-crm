@@ -104,7 +104,7 @@ export function RescheduleDialog({
           <DialogDescription>
             Choose a new slot. AI-assisted changes:{" "}
             {aiPolicy === "pending_configuration"
-              ? "policy pending — staff path only in this demo."
+              ? "policy pending — staff path only."
               : aiPolicy.replace("_", " ")}
           </DialogDescription>
         </DialogHeader>

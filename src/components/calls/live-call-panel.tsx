@@ -175,7 +175,7 @@ export function LiveCallPanel({ state }: LiveCallPanelProps) {
 
           <div className="space-y-2 rounded-xl border border-border bg-background p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-              Live transcript (demo)
+              Live transcript
             </p>
             <div className="rounded-lg bg-surface p-2.5 text-sm">
               <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted">

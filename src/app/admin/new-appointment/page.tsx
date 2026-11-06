@@ -14,7 +14,7 @@ export default function AdminNewAppointmentPage() {
     <div className="mx-auto max-w-2xl space-y-4">
       <h1 className="text-xl font-semibold sm:text-2xl">New appointment</h1>
       <p className="text-sm text-muted">
-        Admin-only provisional reservation · demo fictional data
+        Admin-only provisional reservation
       </p>
       <BookingWizard state={state} />
     </div>

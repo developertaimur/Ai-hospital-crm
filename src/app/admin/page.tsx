@@ -14,7 +14,6 @@ import {
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Panel } from "@/components/layout/panel";
 import { StatCard } from "@/components/layout/stat-card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDemoReady } from "@/lib/hooks/use-demo-ready";
 import { formatPkr } from "@/lib/money";
@@ -74,7 +73,7 @@ export default function AdminDashboardPage() {
 
   const primaryStats = [
     {
-      href: "/admin/appointments",
+      href: `/admin/appointments?date=${todayKey}`,
       label: "Appointments today",
       value: todayApts.length,
       hint: todayKey,
@@ -82,7 +81,7 @@ export default function AdminDashboardPage() {
       tone: "primary" as const,
     },
     {
-      href: "/admin/payments",
+      href: "/admin/payments?view=awaiting",
       label: "Awaiting payment",
       value: awaitingPayment,
       hint: "Provisional holds",
@@ -90,7 +89,7 @@ export default function AdminDashboardPage() {
       tone: "warning" as const,
     },
     {
-      href: "/admin/appointments",
+      href: "/admin/appointments?status=confirmed",
       label: "Confirmed",
       value: confirmed,
       hint: "Ready for arrival",
@@ -98,7 +97,7 @@ export default function AdminDashboardPage() {
       tone: "success" as const,
     },
     {
-      href: "/admin/callbacks",
+      href: "/admin/callbacks?status=pending",
       label: "Pending callbacks",
       value: pendingCallbacks,
       hint: "Needs follow-up",
@@ -109,7 +108,7 @@ export default function AdminDashboardPage() {
 
   const secondaryStats = [
     {
-      href: "/admin/whatsapp",
+      href: "/admin/whatsapp?filter=open",
       label: "WhatsApp open",
       value: whatsappOpen,
       hint: "Live + handed off",
@@ -117,7 +116,7 @@ export default function AdminDashboardPage() {
       tone: "primary" as const,
     },
     {
-      href: "/admin/whatsapp",
+      href: "/admin/whatsapp?filter=human",
       label: "Need human",
       value: whatsappAwaitingHuman,
       hint: "Payment handoffs",
@@ -125,7 +124,7 @@ export default function AdminDashboardPage() {
       tone: "warning" as const,
     },
     {
-      href: "/admin/whatsapp",
+      href: "/admin/whatsapp?filter=booked",
       label: "WhatsApp bookings",
       value: whatsappBooked,
       hint: "Linked holds",
@@ -133,7 +132,7 @@ export default function AdminDashboardPage() {
       tone: "success" as const,
     },
     {
-      href: "/admin/payments",
+      href: "/admin/payments?view=verified",
       label: "Verified payments",
       value: verifiedPayments,
       hint: formatPkr(verifiedTotalPaisa),
@@ -141,7 +140,7 @@ export default function AdminDashboardPage() {
       tone: "success" as const,
     },
     {
-      href: "/admin/payments",
+      href: "/admin/payments?view=outstanding",
       label: "Outstanding",
       value: outstanding,
       hint: "Unpaid / review",
@@ -156,20 +155,13 @@ export default function AdminDashboardPage() {
         eyebrow="Operations"
         title="Admin overview"
         description={`${todayLabel} · Pakistan Standard Time`}
-        badge={<Badge variant="secondary">Demo data</Badge>}
         actions={
-          <>
-            <Badge variant="default" className="gap-1.5 px-2.5 py-1 font-medium">
-              <span className="size-1.5 rounded-full bg-primary" />
-              Live metrics
-            </Badge>
-            <Button asChild size="sm" className="rounded-xl">
-              <Link href="/admin/new-appointment">
-                <Plus className="size-4" aria-hidden />
-                New appointment
-              </Link>
-            </Button>
-          </>
+          <Button asChild size="sm" className="rounded-xl">
+            <Link href="/admin/new-appointment">
+              <Plus className="size-4" aria-hidden />
+              New appointment
+            </Link>
+          </Button>
         }
       />
 
@@ -198,12 +190,24 @@ export default function AdminDashboardPage() {
           <div className="flex flex-col gap-2">
             {(
               [
-                { href: "/admin/appointments", label: "Today’s appointments" },
-                { href: "/admin/whatsapp", label: "WhatsApp inbox" },
-                { href: "/admin/payments", label: "Verify payments" },
-                { href: "/admin/callbacks", label: "Callbacks queue" },
+                {
+                  href: `/admin/appointments?date=${todayKey}`,
+                  label: "Today’s appointments",
+                },
+                {
+                  href: "/admin/whatsapp?filter=open",
+                  label: "WhatsApp inbox",
+                },
+                {
+                  href: "/admin/payments?view=awaiting",
+                  label: "Verify payments",
+                },
+                {
+                  href: "/admin/callbacks?status=pending",
+                  label: "Callbacks queue",
+                },
                 { href: "/admin/doctors", label: "Doctors & services" },
-                { href: "/admin/demo-tools", label: "Demo tools" },
+                { href: "/admin/demo-tools", label: "Tools" },
               ] as const
             ).map((link) => (
               <Link

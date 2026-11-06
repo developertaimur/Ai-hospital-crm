@@ -128,7 +128,7 @@ export function PaymentPanel({ appointment, payments }: PaymentPanelProps) {
       {canVerify ? (
         <div className="space-y-3 border-t border-border pt-4">
           <p className="text-xs text-muted">
-            Staff verification updates shared demo state. Minimum 50% confirms
+            Staff verification updates shared state. Minimum 50% confirms
             booking when eligible.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">

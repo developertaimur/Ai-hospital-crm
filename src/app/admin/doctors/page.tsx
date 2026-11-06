@@ -461,7 +461,7 @@ export default function AdminDoctorsPage() {
                   <h3 className="text-sm font-semibold">Login assignment</h3>
                 </div>
                 <p className="mb-3 text-xs text-muted">
-                  Demo credentials only — stored in browser state, not secure.
+                  Credentials are stored in browser state for local use only.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">

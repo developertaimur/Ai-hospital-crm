@@ -77,7 +77,7 @@ export function InboundCallDetailSheet({
             {callerDisplayName(state, call)}
           </SheetTitle>
           <SheetDescription>
-            Incoming AI call · demo fictional data · {call.id}
+            Incoming AI call · {call.id}
           </SheetDescription>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
@@ -150,7 +150,7 @@ export function InboundCallDetailSheet({
               Patient / AI conversation transcript
             </h3>
             <p className="mb-3 text-xs text-muted">
-              Simulated demo transcript — not a clinical record.
+              Simulated transcript — not a clinical record.
             </p>
             <div className="space-y-3 text-sm">
               <div className="rounded-lg border border-border bg-background p-3">
@@ -256,7 +256,7 @@ export function InboundCallDetailSheet({
               </dl>
             ) : (
               <p className="rounded-lg border border-dashed border-border bg-background px-3 py-4 text-sm text-muted">
-                No provisional booking linked to this call (demo).
+                No provisional booking linked to this call.
               </p>
             )}
           </section>
@@ -303,8 +303,7 @@ export function InboundCallDetailSheet({
               </dl>
             ) : call.forwardedToAdmin ? (
               <p className="text-sm text-muted">
-                Call marked forwarded to Admin. No separate callback record in
-                demo seed.
+                Call marked forwarded to Admin. No separate callback record.
               </p>
             ) : (
               <p className="text-sm text-muted">

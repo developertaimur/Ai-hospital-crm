@@ -213,7 +213,6 @@ export default function ReceptionIncomingCallsPage() {
         eyebrow="Reception desk"
         title="Reception overview"
         description={`${todayLabel} · Pakistan Standard Time · view-only monitor`}
-        badge={<Badge variant="secondary">Demo data</Badge>}
         actions={
           <>
             <Badge variant="default" className="gap-1.5 px-2.5 py-1 font-medium">
@@ -227,7 +226,7 @@ export default function ReceptionIncomingCallsPage() {
                 ? "Live call"
                 : ringing
                   ? "Incoming ring"
-                  : "AI receptionist · Demo"}
+                  : "AI receptionist"}
             </Badge>
             <Button
               type="button"
@@ -246,7 +245,7 @@ export default function ReceptionIncomingCallsPage() {
                   return;
                 }
                 toast({
-                  title: "Demo incoming call",
+                  title: "Incoming call",
                   description: "Accept the popup to show it live on this page.",
                 });
               }}

@@ -8,7 +8,6 @@ import { AppointmentTable } from "@/components/appointments/appointment-table";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Panel } from "@/components/layout/panel";
 import { StatCard } from "@/components/layout/stat-card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDemoReady } from "@/lib/hooks/use-demo-ready";
 import { useAuthStore } from "@/lib/store/auth-store";
@@ -57,7 +56,6 @@ export default function DoctorWeekPage() {
         eyebrow="Doctor schedule"
         title="This week"
         description={`Confirmed queue · ${weekKeys[0]} → ${weekKeys[6]} · Asia/Karachi`}
-        badge={<Badge variant="secondary">Demo data</Badge>}
         actions={
           <Button asChild size="sm" variant="secondary" className="rounded-xl">
             <Link href="/doctor">

@@ -11,7 +11,6 @@ import { AppointmentTable } from "@/components/appointments/appointment-table";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Panel } from "@/components/layout/panel";
 import { StatCard } from "@/components/layout/stat-card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDemoReady } from "@/lib/hooks/use-demo-ready";
 import { useAuthStore } from "@/lib/store/auth-store";
@@ -29,7 +28,7 @@ export default function DoctorTodayPage() {
     return (
       <p className="text-sm text-muted">
         No doctor profile linked to this session. Sign in as a doctor account or
-        use admin view-as from Demo Tools.
+        use admin view-as from Tools.
       </p>
     );
   }
@@ -57,7 +56,6 @@ export default function DoctorTodayPage() {
         eyebrow="Doctor schedule"
         title="Today’s queue"
         description={`${todayLabel} · confirmed appointments only · Asia/Karachi`}
-        badge={<Badge variant="secondary">Demo data</Badge>}
         actions={
           <Button asChild size="sm" variant="secondary" className="rounded-xl">
             <Link href="/doctor/week">

@@ -42,18 +42,18 @@ export default function AdminDemoToolsPage() {
   const [busy, setBusy] = useState(false);
 
   if (!ready || !state) {
-    return <p className="text-sm text-muted">Loading demo tools…</p>;
+    return <p className="text-sm text-muted">Loading tools…</p>;
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold sm:text-2xl">Demo tools</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Tools</h1>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Demo clock</CardTitle>
+          <CardTitle className="text-base">Clock</CardTitle>
         </CardHeader>
         <CardContent className="text-sm">
-          Current demo time (Karachi):{" "}
+          Current time (Karachi):{" "}
           <strong>
             {formatKarachi(getDemoNow().toISOString(), "dd MMM yyyy · hh:mm a")}
           </strong>
@@ -109,7 +109,7 @@ export default function AdminDemoToolsPage() {
               void withDemoRepo((a) =>
                 repo.advanceDemoTime(a, parseInt(minutes, 10) || 0),
               )
-                .then(() => toast({ title: "Demo time advanced" }))
+                .then(() => toast({ title: "Time advanced" }))
                 .finally(() => setBusy(false));
             }}
           >
@@ -130,11 +130,11 @@ export default function AdminDemoToolsPage() {
             onClick={() => {
               setBusy(true);
               void demoResetAll()
-                .then(() => toast({ title: "Demo data reset" }))
+                .then(() => toast({ title: "Data reset" }))
                 .finally(() => setBusy(false));
             }}
           >
-            Reset all demo data
+            Reset all data
           </Button>
         </CardContent>
       </Card>

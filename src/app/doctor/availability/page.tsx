@@ -70,7 +70,7 @@ export default function DoctorAvailabilityPage() {
     if (affected.length > 0) {
       toast({
         title: "Bookings may be affected",
-        description: `${affected.length} active appointment(s) overlap this period. Staff must reschedule — not auto-updated in demo.`,
+        description: `${affected.length} active appointment(s) overlap this period. Staff must reschedule — not auto-updated.`,
         variant: "destructive",
       });
     } else {
@@ -98,7 +98,7 @@ export default function DoctorAvailabilityPage() {
               Availability
             </h1>
             <p className="max-w-xl text-sm text-muted">
-              Working hours, breaks, and leave · demo surface · Asia/Karachi
+              Working hours, breaks, and leave · Asia/Karachi
             </p>
           </div>
           {doctor ? (
@@ -268,7 +268,7 @@ export default function DoctorAvailabilityPage() {
               Leave
             </h2>
             <p className="text-sm text-muted">
-              Demo surface only — conflicts are flagged, not auto-rescheduled.
+              Conflicts are flagged, not auto-rescheduled.
             </p>
           </div>
         </div>

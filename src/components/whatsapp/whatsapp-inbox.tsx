@@ -36,11 +36,21 @@ import { formatKarachi } from "@/lib/time";
 import type { DemoState, WhatsAppConversationStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+type StatusFilter =
+  | "all"
+  | "open"
+  | "human"
+  | "linked"
+  | WhatsAppConversationStatus;
+
 const STATUS_FILTERS: Array<{
-  value: "all" | WhatsAppConversationStatus;
+  value: StatusFilter;
   label: string;
 }> = [
   { value: "all", label: "All statuses" },
+  { value: "open", label: "Open (live + handoff)" },
+  { value: "human", label: "Need human" },
+  { value: "linked", label: "With booking" },
   { value: "active", label: "Active (AI)" },
   { value: "handed_off", label: "Awaiting human" },
   { value: "human_active", label: "Human active" },
@@ -48,6 +58,24 @@ const STATUS_FILTERS: Array<{
   { value: "closed", label: "Closed" },
   { value: "abandoned", label: "Abandoned" },
 ];
+
+function resolveInitialFilter(value?: string | null): StatusFilter {
+  if (
+    value === "open" ||
+    value === "human" ||
+    value === "linked" ||
+    value === "booked" ||
+    value === "active" ||
+    value === "handed_off" ||
+    value === "human_active" ||
+    value === "closed" ||
+    value === "abandoned" ||
+    value === "all"
+  ) {
+    return value === "booked" ? "linked" : value;
+  }
+  return "all";
+}
 
 const PAYMENT_QUICK_REPLIES = [
   "Please pay via JazzCash to 0300-0000000 and share the screenshot here.",
@@ -87,9 +115,14 @@ function statusLabel(status: WhatsAppConversationStatus): string {
 interface WhatsAppInboxProps {
   state: DemoState;
   mode: "admin" | "reception";
+  initialFilter?: string | null;
 }
 
-export function WhatsAppInbox({ state, mode }: WhatsAppInboxProps) {
+export function WhatsAppInbox({
+  state,
+  mode,
+  initialFilter,
+}: WhatsAppInboxProps) {
   const isAdmin = mode === "admin";
   const session = useAuthStore((s) => s.session);
   const activeId = useWhatsAppStore((s) => s.activeId);
@@ -103,10 +136,14 @@ export function WhatsAppInbox({ state, mode }: WhatsAppInboxProps) {
   const [manualSelectedId, setManualSelectedId] = useState<string | null>(null);
   const selectedId = activeId ?? manualSelectedId;
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | WhatsAppConversationStatus
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(() =>
+    resolveInitialFilter(initialFilter),
+  );
   const [draft, setDraft] = useState("");
+
+  useEffect(() => {
+    setStatusFilter(resolveInitialFilter(initialFilter));
+  }, [initialFilter]);
 
   const actorUserId = session?.userId ?? "user-admin";
   const actorLabel =
@@ -126,7 +163,21 @@ export function WhatsAppInbox({ state, mode }: WhatsAppInboxProps) {
     const q = search.trim().toLowerCase();
     return (state.whatsappConversations ?? [])
       .filter((c) => {
-        if (statusFilter !== "all" && c.status !== statusFilter) return false;
+        if (statusFilter === "open") {
+          if (
+            c.status !== "active" &&
+            c.status !== "handed_off" &&
+            c.status !== "human_active"
+          ) {
+            return false;
+          }
+        } else if (statusFilter === "human") {
+          if (c.status !== "handed_off") return false;
+        } else if (statusFilter === "linked") {
+          if (!c.appointmentId) return false;
+        } else if (statusFilter !== "all" && c.status !== statusFilter) {
+          return false;
+        }
         if (!q) return true;
         return (
           c.patientName.toLowerCase().includes(q) ||
@@ -219,7 +270,7 @@ export function WhatsAppInbox({ state, mode }: WhatsAppInboxProps) {
             <p className="max-w-xl text-sm text-muted">
               {isAdmin
                 ? "AI books provisional slots, then hands off to you for payment details. View the script and continue as a human."
-                : "View-only monitor of WhatsApp booking chats · AI + human handoffs (demo)."}
+                : "View-only monitor of WhatsApp booking chats · AI + human handoffs."}
             </p>
           </div>
           <Button
@@ -242,24 +293,34 @@ export function WhatsAppInbox({ state, mode }: WhatsAppInboxProps) {
               value: openCount,
               icon: MessageCircle,
               tone: "text-primary bg-primary/10",
+              filter: "open" as const,
             },
             {
               label: "Awaiting human",
               value: awaitingHuman,
               icon: PhoneForwarded,
               tone: "text-warning bg-warning/10",
+              filter: "human" as const,
             },
             {
               label: "With booking",
               value: bookedCount,
               icon: CalendarCheck2,
               tone: "text-success bg-success/10",
+              filter: "linked" as const,
             },
           ] as const
         ).map((card) => (
-          <div
+          <button
             key={card.label}
-            className="rounded-2xl border border-border bg-surface p-4 shadow-sm"
+            type="button"
+            onClick={() => setStatusFilter(card.filter)}
+            className={cn(
+              "rounded-2xl border bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              statusFilter === card.filter
+                ? "border-primary/35 ring-1 ring-primary/20"
+                : "border-border",
+            )}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -279,7 +340,7 @@ export function WhatsAppInbox({ state, mode }: WhatsAppInboxProps) {
                 <card.icon className="size-5" aria-hidden />
               </span>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -313,9 +374,7 @@ export function WhatsAppInbox({ state, mode }: WhatsAppInboxProps) {
               <Label htmlFor={`wa-status-${mode}`}>Status</Label>
               <Select
                 value={statusFilter}
-                onValueChange={(v) =>
-                  setStatusFilter(v as "all" | WhatsAppConversationStatus)
-                }
+                onValueChange={(v) => setStatusFilter(v as StatusFilter)}
               >
                 <SelectTrigger id={`wa-status-${mode}`}>
                   <SelectValue />
@@ -510,7 +569,7 @@ export function WhatsAppInbox({ state, mode }: WhatsAppInboxProps) {
                               if (ok) {
                                 toast({
                                   title: "Patient replied",
-                                  description: "Demo patient follow-up added.",
+                                  description: "Patient follow-up added.",
                                 });
                               }
                             }}
@@ -546,7 +605,7 @@ export function WhatsAppInbox({ state, mode }: WhatsAppInboxProps) {
                 AI script
               </h2>
               <p className="mt-1 text-xs text-muted">
-                Planned demo turns · booking then human handoff for payment
+                Planned turns · booking then human handoff for payment
               </p>
             </div>
             {selected ? (

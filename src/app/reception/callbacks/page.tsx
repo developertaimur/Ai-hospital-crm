@@ -30,7 +30,7 @@ export default function ReceptionCallbacksStatusPage() {
       <header className="space-y-1">
         <h1 className="text-xl font-semibold sm:text-2xl">Callbacks status</h1>
         <p className="text-sm text-muted">
-          View-only · demo fictional data. Assignment and completion are
+          View-only. Assignment and completion are
           Admin-only.
         </p>
       </header>

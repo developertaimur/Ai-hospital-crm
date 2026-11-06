@@ -17,7 +17,7 @@ const nav: NavItem[] = [
   { href: "/admin/staff", label: "Staff" },
   { href: "/admin/settings", label: "Settings" },
   { href: "/admin/activity", label: "Activity" },
-  { href: "/admin/demo-tools", label: "Demo Tools" },
+  { href: "/admin/demo-tools", label: "Tools" },
 ];
 
 export default function AdminLayout({

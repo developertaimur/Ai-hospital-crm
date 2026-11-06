@@ -76,7 +76,7 @@ export default function ReceptionBookingsStatusPage() {
           Bookings status
         </h1>
         <p className="text-sm text-muted">
-          View-only · demo fictional data. Confirm, cancel, reschedule, and
+          View-only. Confirm, cancel, reschedule, and
           payment verification are Admin-only.
         </p>
       </header>

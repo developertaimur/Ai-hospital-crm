@@ -53,7 +53,7 @@ const TYPE_FILTERS: Array<{ value: "all" | ActivityEventType; label: string }> =
     { value: "callback_updated", label: "Callbacks" },
     { value: "doctor_created", label: "Doctors" },
     { value: "settings_updated", label: "Settings" },
-    { value: "demo_reset", label: "Demo reset" },
+    { value: "demo_reset", label: "Data reset" },
   ];
 
 function dayTotals(state: DemoState, dateKey: string) {
@@ -189,7 +189,6 @@ export default function AdminActivityPage() {
         eyebrow="Audit & ops"
         title="Activity"
         description="Day-wise hospital activity — bookings, payments, WhatsApp, and staff actions."
-        badge={<Badge variant="secondary">Demo data</Badge>}
         actions={
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-1.5">

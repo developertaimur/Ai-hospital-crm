@@ -39,8 +39,7 @@ export function IncomingCallPopup() {
           <DialogHeader className="space-y-2 text-center sm:text-center">
             <DialogTitle className="text-xl">Incoming call</DialogTitle>
             <DialogDescription className="text-sm">
-              Demo fictional caller — accept to monitor the live AI call on this
-              dashboard.
+              Accept to monitor the live AI call on this dashboard.
             </DialogDescription>
           </DialogHeader>
 
