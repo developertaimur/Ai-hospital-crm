@@ -218,77 +218,79 @@ export function AppShell({
           <div className="mt-auto">{userFooter}</div>
         </aside>
 
-        <div className="relative flex min-w-0 flex-1 flex-col bg-background">
-          <header className="sticky top-0 z-40 flex items-center gap-1.5 border-b border-border/80 bg-surface/95 px-2 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:gap-2 sm:px-4 sm:py-3 md:hidden">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="shrink-0"
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-nav"
-              onClick={toggleMobile}
-            >
-              {mobileOpen ? <X /> : <Menu />}
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Cross className="size-4" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{title}</p>
-                <p className="truncate text-xs text-muted">
-                  {displayName ?? "Life Care — Islamabad"}
-                </p>
-              </div>
-            </div>
-            <ThemeToggle />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="shrink-0 text-muted hover:text-destructive sm:hidden"
-              aria-label="Sign out"
-              onClick={() => {
-                logout();
-                router.push("/login");
-              }}
-            >
-              <LogOut className="size-4" aria-hidden />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="hidden shrink-0 gap-1.5 text-muted hover:text-destructive sm:inline-flex"
-              onClick={() => {
-                logout();
-                router.push("/login");
-              }}
-            >
-              <LogOut className="size-4" aria-hidden />
-              Sign out
-            </Button>
-          </header>
-
-          {mobileOpen ? (
-            <>
-              <button
+        <div className="flex min-w-0 flex-1 flex-col bg-background">
+          <div className="relative sticky top-0 z-40 md:hidden">
+            <header className="relative z-50 flex items-center gap-1.5 border-b border-border/80 bg-surface/95 px-2 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:gap-2 sm:px-4 sm:py-3">
+              <Button
                 type="button"
-                aria-label="Close menu"
-                className="fixed inset-0 z-40 bg-slate-900/40 md:hidden"
-                onClick={closeMobile}
-              />
-              <div
-                id="mobile-nav"
-                className="absolute inset-x-0 top-full z-50 max-h-[min(78dvh,calc(100dvh-3.5rem))] overflow-y-auto border-b border-border bg-surface shadow-lg md:hidden"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav"
+                onClick={toggleMobile}
               >
-                {navContent}
-                {userFooter}
+                {mobileOpen ? <X /> : <Menu />}
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Cross className="size-4" aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{title}</p>
+                  <p className="truncate text-xs text-muted">
+                    {displayName ?? "Life Care — Islamabad"}
+                  </p>
+                </div>
               </div>
-            </>
-          ) : null}
+              <ThemeToggle />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-muted hover:text-destructive sm:hidden"
+                aria-label="Sign out"
+                onClick={() => {
+                  logout();
+                  router.push("/login");
+                }}
+              >
+                <LogOut className="size-4" aria-hidden />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="hidden shrink-0 gap-1.5 text-muted hover:text-destructive sm:inline-flex"
+                onClick={() => {
+                  logout();
+                  router.push("/login");
+                }}
+              >
+                <LogOut className="size-4" aria-hidden />
+                Sign out
+              </Button>
+            </header>
+
+            {mobileOpen ? (
+              <>
+                <button
+                  type="button"
+                  aria-label="Close menu"
+                  className="fixed inset-0 z-40 bg-slate-900/40"
+                  onClick={closeMobile}
+                />
+                <div
+                  id="mobile-nav"
+                  className="absolute inset-x-0 top-full z-50 max-h-[min(78dvh,calc(100dvh-3.5rem))] overflow-y-auto border-b border-border bg-surface shadow-lg"
+                >
+                  {navContent}
+                  {userFooter}
+                </div>
+              </>
+            ) : null}
+          </div>
 
           <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5 md:p-6 lg:p-7">
             {children}
