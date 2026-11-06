@@ -107,7 +107,7 @@ export function AppointmentTable({
 
   return (
     <>
-      <div className="max-w-full rounded-xl border border-border bg-surface shadow-sm">
+      <div className="max-w-full overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">

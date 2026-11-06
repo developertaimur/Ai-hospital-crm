@@ -1,16 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import {
   ChevronRight,
   Clock3,
   Forward,
+  MessageCircle,
   PhoneIncoming,
   PhoneMissed,
   Search,
 } from "lucide-react";
 import { InboundCallDetailSheet } from "@/components/calls/inbound-call-detail-sheet";
 import { LiveCallPanel } from "@/components/calls/live-call-panel";
+import { DashboardHeader } from "@/components/layout/dashboard-header";
+import { Panel } from "@/components/layout/panel";
+import { StatCard } from "@/components/layout/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +35,7 @@ import {
   formatCallDuration,
 } from "@/lib/display/lookups";
 import { useLiveCallStore } from "@/lib/store/live-call-store";
-import { formatKarachi } from "@/lib/time";
+import { formatKarachi, getDemoNow } from "@/lib/time";
 import type { BookingOutcome, CallRecord } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
@@ -188,42 +193,47 @@ export default function ReceptionIncomingCallsPage() {
     );
   }
 
+  const chats = state.whatsappConversations ?? [];
+  const waOpen = chats.filter(
+    (c) =>
+      c.status === "active" ||
+      c.status === "handed_off" ||
+      c.status === "human_active",
+  ).length;
+  const waHuman = chats.filter((c) => c.status === "handed_off").length;
+  const waBooked = chats.filter((c) => !!c.appointmentId).length;
+  const todayLabel = formatKarachi(
+    getDemoNow().toISOString(),
+    "EEEE, d MMMM yyyy",
+  );
+
   return (
     <div className="space-y-6">
-      <header className="relative overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(15,118,110,0.14),_transparent_55%),radial-gradient(ellipse_at_bottom_right,_rgba(15,118,110,0.06),_transparent_50%)]"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-              Reception desk
-            </p>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-              Incoming Calls
-            </h1>
-            <p className="max-w-xl text-sm text-muted">
-              Live AI call monitor · view-only · Asia/Karachi
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2 text-sm text-primary">
-              <span className="relative flex size-2.5">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary/40 opacity-75" />
-                <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
-              </span>
+      <DashboardHeader
+        eyebrow="Reception desk"
+        title="Reception overview"
+        description={`${todayLabel} · Pakistan Standard Time · view-only monitor`}
+        badge={<Badge variant="secondary">Demo data</Badge>}
+        actions={
+          <>
+            <Badge variant="default" className="gap-1.5 px-2.5 py-1 font-medium">
+              <span
+                className={cn(
+                  "size-1.5 rounded-full",
+                  live || ringing ? "animate-pulse bg-primary" : "bg-primary/50",
+                )}
+              />
               {live
-                ? "Live call active"
+                ? "Live call"
                 : ringing
-                  ? "Incoming call ringing"
-                  : "Monitoring queue"}
-            </div>
+                  ? "Incoming ring"
+                  : "AI receptionist · Demo"}
+            </Badge>
             <Button
               type="button"
               size="sm"
               variant="secondary"
-              className="gap-1.5"
+              className="rounded-xl"
               disabled={!!ringing || !!live}
               onClick={() => {
                 const created = simulateIncomingCall();
@@ -244,11 +254,9 @@ export default function ReceptionIncomingCallsPage() {
               <PhoneIncoming className="size-4" aria-hidden />
               Simulate call
             </Button>
-          </div>
-        </div>
-      </header>
-
-      <LiveCallPanel state={state} />
+          </>
+        }
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {(
@@ -258,28 +266,28 @@ export default function ReceptionIncomingCallsPage() {
               label: "Total calls",
               value: summary.total,
               icon: PhoneIncoming,
-              tone: "text-primary bg-primary/10",
+              tone: "primary" as const,
             },
             {
               id: "with_booking" as const,
               label: "With booking",
               value: summary.withBooking,
               icon: Clock3,
-              tone: "text-success bg-success/10",
+              tone: "success" as const,
             },
             {
               id: "no_booking" as const,
               label: "No booking",
               value: summary.withoutBooking,
               icon: PhoneMissed,
-              tone: "text-warning bg-warning/10",
+              tone: "warning" as const,
             },
             {
               id: "forwarded" as const,
               label: "Forwarded",
               value: summary.forwarded,
               icon: Forward,
-              tone: "text-primary bg-primary/10",
+              tone: "primary" as const,
             },
           ] as const
         ).map((card) => {
@@ -291,18 +299,14 @@ export default function ReceptionIncomingCallsPage() {
               aria-pressed={active}
               onClick={() => selectQuickFilter(card.id)}
               className={cn(
-                "group rounded-2xl border bg-surface p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                active
-                  ? "border-primary/40 ring-1 ring-primary/20 shadow-md"
-                  : "border-border",
+                "rounded-2xl border border-border/80 bg-surface p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active && "border-primary/30 bg-accent-soft ring-1 ring-primary/15",
               )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted">
-                    {card.label}
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight text-foreground">
+                  <p className="text-xs font-medium text-muted">{card.label}</p>
+                  <p className="mt-2 text-[1.75rem] font-semibold tabular-nums tracking-tight">
                     {card.value}
                   </p>
                   <p className="mt-1 text-[11px] text-muted">
@@ -311,8 +315,10 @@ export default function ReceptionIncomingCallsPage() {
                 </div>
                 <span
                   className={cn(
-                    "flex size-10 items-center justify-center rounded-xl transition-colors",
-                    card.tone,
+                    "flex size-10 items-center justify-center rounded-xl",
+                    card.tone === "success" && "bg-success/10 text-success",
+                    card.tone === "warning" && "bg-warning/10 text-warning",
+                    card.tone === "primary" && "bg-primary/10 text-primary",
                   )}
                 >
                   <card.icon className="size-5" aria-hidden />
@@ -323,133 +329,156 @@ export default function ReceptionIncomingCallsPage() {
         })}
       </div>
 
-      <section
-        aria-label="Incoming call list"
-        className="space-y-4 rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5"
-      >
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">Call log</h2>
-            <p className="text-sm text-muted">
-              Open a call for transcript, summary, booking status, and callback
-              details.
-            </p>
-          </div>
-          <p className="rounded-full bg-background px-3 py-1 text-xs font-medium text-muted ring-1 ring-border">
-            Showing {filtered.length} of {incomingCalls.length}
-          </p>
-        </div>
+      <LiveCallPanel state={state} />
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="reception-call-search">Search</Label>
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-                aria-hidden
-              />
-              <Input
-                id="reception-call-search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Caller, number, outcome…"
-                className="pl-9"
-              />
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <Panel
+          title="Incoming call log"
+          description="Open a call for transcript, summary, and booking status."
+          action={
+            <Badge variant="secondary">
+              {filtered.length} of {incomingCalls.length}
+            </Badge>
+          }
+        >
+          <div className="mb-4 grid gap-3 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="reception-call-search">Search</Label>
+              <div className="relative">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+                  aria-hidden
+                />
+                <Input
+                  id="reception-call-search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Caller, number, outcome…"
+                  className="rounded-xl pl-9"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="reception-call-outcome">Outcome</Label>
+              <Select
+                value={outcomeFilter}
+                onValueChange={(v) =>
+                  setOutcomeFilter(v as "all" | BookingOutcome)
+                }
+              >
+                <SelectTrigger id="reception-call-outcome" className="rounded-xl">
+                  <SelectValue placeholder="All outcomes" />
+                </SelectTrigger>
+                <SelectContent>
+                  {OUTCOME_FILTERS.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="reception-call-outcome">Outcome</Label>
-            <Select
-              value={outcomeFilter}
-              onValueChange={(v) =>
-                setOutcomeFilter(v as "all" | BookingOutcome)
-              }
-            >
-              <SelectTrigger id="reception-call-outcome">
-                <SelectValue placeholder="All outcomes" />
-              </SelectTrigger>
-              <SelectContent>
-                {OUTCOME_FILTERS.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
 
-        {filtered.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border bg-background px-4 py-12 text-center text-sm text-muted">
-            No incoming calls match your filters.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {filtered.map((call) => {
-              const name = callerDisplayName(state, call);
-              const isSelected = selectedId === call.id;
-              return (
-                <li key={call.id}>
-                  <button
-                    type="button"
-                    aria-label={`Open call from ${name}`}
-                    aria-pressed={isSelected}
-                    onClick={() => openCall(call.id)}
-                    onKeyDown={(e) => onRowKeyDown(e, call.id)}
-                    className={cn(
-                      "group flex w-full items-center gap-3 rounded-2xl border border-border bg-background px-3 py-3 text-left transition-all duration-200 hover:border-primary/25 hover:bg-primary/[0.03] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:gap-4 sm:px-4",
-                      isSelected &&
-                        "border-primary/30 bg-primary/[0.06] shadow-sm ring-1 ring-primary/15",
-                    )}
-                  >
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary transition-transform duration-200 group-hover:scale-105">
-                      {callerInitials(name)}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate font-semibold text-foreground">
-                          {name}
-                        </p>
-                        <Badge
-                          variant={outcomeBadgeVariant(call.bookingOutcome)}
-                          className="font-medium"
-                        >
-                          {bookingOutcomeLabel(call.bookingOutcome)}
-                        </Badge>
-                        {!call.appointmentId ? (
-                          <span className="text-xs text-muted">No booking</span>
-                        ) : null}
+          {filtered.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-border bg-background px-4 py-12 text-center text-sm text-muted">
+              No incoming calls match your filters.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {filtered.map((call) => {
+                const name = callerDisplayName(state, call);
+                const isSelected = selectedId === call.id;
+                return (
+                  <li key={call.id}>
+                    <button
+                      type="button"
+                      aria-label={`Open call from ${name}`}
+                      aria-pressed={isSelected}
+                      onClick={() => openCall(call.id)}
+                      onKeyDown={(e) => onRowKeyDown(e, call.id)}
+                      className={cn(
+                        "group flex w-full items-center gap-3 rounded-2xl border border-border/80 bg-background px-3 py-3 text-left transition-all duration-200 hover:border-primary/25 hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:gap-4 sm:px-4",
+                        isSelected &&
+                          "border-primary/30 bg-accent-soft shadow-sm ring-1 ring-primary/15",
+                      )}
+                    >
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                        {callerInitials(name)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-semibold text-foreground">
+                            {name}
+                          </p>
+                          <Badge
+                            variant={outcomeBadgeVariant(call.bookingOutcome)}
+                            className="font-medium"
+                          >
+                            {bookingOutcomeLabel(call.bookingOutcome)}
+                          </Badge>
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted sm:text-sm">
+                          <span className="tabular-nums">
+                            {callerDisplayNumber(state, call)}
+                          </span>
+                          <span className="tabular-nums">
+                            {formatKarachi(call.startedAt, "dd MMM · hh:mm a")}
+                          </span>
+                          <span>
+                            {formatCallDuration(call.durationSeconds)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted sm:text-sm">
-                        <span className="tabular-nums">
-                          {callerDisplayNumber(state, call)}
-                        </span>
-                        <span className="tabular-nums">
-                          {formatKarachi(call.startedAt, "dd MMM · hh:mm a")}
-                        </span>
-                        <span>
-                          {formatCallDuration(call.durationSeconds)}
-                        </span>
-                        <span>
-                          {call.language === "ur"
-                            ? "Urdu"
-                            : call.language === "en"
-                              ? "English"
-                              : "—"}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRight
-                      className="size-4 shrink-0 text-muted transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary"
-                      aria-hidden
-                    />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+                      <ChevronRight
+                        className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+                        aria-hidden
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Panel>
+
+        <Panel
+          title="WhatsApp bookings"
+          description="AI books, then Admin handles payment details."
+          action={
+            <Button type="button" size="sm" variant="secondary" className="rounded-xl" asChild>
+              <Link href="/reception/whatsapp">
+                <MessageCircle className="size-4" aria-hidden />
+                Open
+              </Link>
+            </Button>
+          }
+        >
+          <div className="grid gap-3">
+            <StatCard
+              href="/reception/whatsapp"
+              label="Open chats"
+              value={waOpen}
+              icon={MessageCircle}
+              tone="primary"
+            />
+            <StatCard
+              href="/reception/whatsapp"
+              label="Awaiting human"
+              value={waHuman}
+              icon={MessageCircle}
+              tone="warning"
+            />
+            <StatCard
+              href="/reception/whatsapp"
+              label="With booking"
+              value={waBooked}
+              icon={MessageCircle}
+              tone="success"
+            />
+          </div>
+        </Panel>
+      </div>
 
       <InboundCallDetailSheet
         open={!!selected}

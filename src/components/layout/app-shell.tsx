@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageCircle,
   PhoneCall,
   PhoneIncoming,
   Settings,
@@ -28,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { DEMO_ACCOUNTS } from "@/lib/auth/demo-accounts";
+import { ThemeToggle } from "./theme-toggle";
 import { ViewingAsBanner } from "./viewing-as-banner";
 
 export interface NavItem {
@@ -44,6 +46,7 @@ const FALLBACK_ICONS: Record<string, LucideIcon> = {
   "/admin/patients": Users,
   "/admin/payments": Wallet,
   "/admin/calls": PhoneCall,
+  "/admin/whatsapp": MessageCircle,
   "/admin/callbacks": PhoneIncoming,
   "/admin/staff": UserRound,
   "/admin/settings": Settings,
@@ -53,6 +56,7 @@ const FALLBACK_ICONS: Record<string, LucideIcon> = {
   "/doctor/week": CalendarClock,
   "/doctor/availability": CalendarCheck2,
   "/reception": PhoneIncoming,
+  "/reception/whatsapp": MessageCircle,
   "/reception/bookings": ClipboardList,
   "/reception/callbacks": PhoneCall,
 };
@@ -105,9 +109,9 @@ export function AppShell({
   }, [mobileOpen]);
 
   const navContent = (
-    <nav className="flex flex-col gap-1.5 p-3" aria-label="Main">
-      <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
-        Navigate
+    <nav className="flex flex-col gap-1 p-3" aria-label="Main">
+      <p className="px-2.5 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+        Menu
       </p>
       {nav.map((item) => {
         const active = pathname === item.href;
@@ -118,24 +122,18 @@ export function AppShell({
             href={item.href}
             onClick={closeMobile}
             className={cn(
-              "group relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+              "group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-medium transition-colors duration-150",
               active
-                ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
-                : "text-foreground/80 hover:bg-primary/[0.07] hover:text-foreground",
+                ? "bg-accent-soft text-primary"
+                : "text-foreground/75 hover:bg-background hover:text-foreground",
             )}
           >
-            {active ? (
-              <span
-                className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary-foreground/80"
-                aria-hidden
-              />
-            ) : null}
             <span
               className={cn(
                 "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
                 active
-                  ? "bg-white/15 text-primary-foreground"
-                  : "bg-background text-primary group-hover:bg-primary/10",
+                  ? "bg-primary/10 text-primary"
+                  : "bg-transparent text-muted group-hover:text-primary",
               )}
             >
               <Icon className="size-4" aria-hidden />
@@ -146,7 +144,7 @@ export function AppShell({
       })}
       {navExtra ? (
         <div
-          className="mt-2 border-t border-border/80 pt-3"
+          className="mt-2 border-t border-border/70 pt-3"
           onClick={closeMobile}
         >
           {navExtra}
@@ -156,13 +154,9 @@ export function AppShell({
   );
 
   const brandBlock = (
-    <div className="relative overflow-hidden border-b border-border/80 p-4">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(15,118,110,0.16),_transparent_60%)]"
-        aria-hidden
-      />
-      <div className="relative flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/30">
+    <div className="border-b border-border/70 p-4">
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
           <Cross className="size-5" aria-hidden />
         </span>
         <div className="min-w-0">
@@ -181,10 +175,10 @@ export function AppShell({
   );
 
   const userFooter = (
-    <div className="border-t border-border/80 p-3">
-      <div className="rounded-xl border border-border bg-background/80 p-3 shadow-sm">
+    <div className="border-t border-border/70 p-3">
+      <div className="rounded-2xl border border-border/80 bg-background p-3">
         <div className="flex items-center gap-2.5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-primary">
             {initialsFromName(displayName)}
           </span>
           <div className="min-w-0 flex-1">
@@ -192,15 +186,16 @@ export function AppShell({
               {displayName}
             </p>
             <p className="truncate text-[11px] capitalize text-muted">
-              {session?.role ?? "staff"}
+              {session?.role ?? "staff"} · Islamabad
             </p>
           </div>
         </div>
+        <ThemeToggle variant="menu" className="mt-2" />
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="mt-2 w-full justify-start text-muted hover:text-destructive"
+          className="mt-1 w-full justify-start text-muted hover:text-destructive"
           onClick={() => {
             logout();
             router.push("/login");
@@ -217,14 +212,14 @@ export function AppShell({
     <div className="flex min-h-dvh flex-col overflow-x-hidden">
       <ViewingAsBanner />
       <div className="flex min-w-0 flex-1">
-        <aside className="hidden w-60 shrink-0 border-r border-border bg-surface md:flex md:flex-col">
+        <aside className="hidden w-[15.5rem] shrink-0 border-r border-border/80 bg-surface md:flex md:flex-col">
           {brandBlock}
           <div className="flex-1 overflow-y-auto">{navContent}</div>
           <div className="mt-auto">{userFooter}</div>
         </aside>
 
-        <div className="relative flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-40 flex items-center gap-1.5 border-b border-border bg-surface/95 px-2 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:gap-2 sm:px-4 sm:py-3 md:hidden">
+        <div className="relative flex min-w-0 flex-1 flex-col bg-background">
+          <header className="sticky top-0 z-40 flex items-center gap-1.5 border-b border-border/80 bg-surface/95 px-2 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:gap-2 sm:px-4 sm:py-3 md:hidden">
             <Button
               type="button"
               variant="ghost"
@@ -248,6 +243,7 @@ export function AppShell({
                 </p>
               </div>
             </div>
+            <ThemeToggle />
             <Button
               type="button"
               variant="ghost"
@@ -294,7 +290,7 @@ export function AppShell({
             </>
           ) : null}
 
-          <main className="min-w-0 flex-1 overflow-x-hidden p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 md:p-6">
+          <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5 md:p-6 lg:p-7">
             {children}
           </main>
         </div>

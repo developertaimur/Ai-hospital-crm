@@ -60,7 +60,7 @@ export function LiveCallPanel({ state }: LiveCallPanelProps) {
   return (
     <section
       aria-label="Live call"
-      className="overflow-hidden rounded-2xl border border-primary/25 bg-surface shadow-md shadow-primary/10"
+      className="overflow-hidden rounded-2xl border border-primary/20 bg-surface shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
     >
       <div className="flex flex-col gap-3 border-b border-primary/15 bg-primary/[0.06] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex items-center gap-3">

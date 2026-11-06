@@ -3,6 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Hospital, Lock, UserRound } from "lucide-react";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,7 +70,7 @@ export default function LoginPage() {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-16 bottom-10 size-64 rounded-full bg-slate-300/30 blur-3xl"
+        className="pointer-events-none absolute -right-16 bottom-10 size-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/5"
         aria-hidden
       />
 
@@ -89,7 +90,10 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-surface p-6 shadow-lg shadow-slate-900/5 sm:p-8">
+        <div className="rounded-2xl border border-border bg-surface p-6 shadow-lg shadow-black/5 dark:shadow-black/40 sm:p-8">
+          <div className="mb-4 flex justify-end">
+            <ThemeToggle />
+          </div>
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="username">Username</Label>

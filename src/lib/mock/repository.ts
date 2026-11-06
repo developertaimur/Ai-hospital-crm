@@ -1658,3 +1658,158 @@ export async function createPatient(
 ) {
   return runMutation(adapter, "createPatient", (s) => createPatientSync(s, input));
 }
+
+export function pickFutureSlotSync(
+  state: DemoState,
+  doctorId: string,
+  serviceId: string,
+  now: Date = getDemoNow(),
+): string | null {
+  for (let day = 1; day <= 14; day++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + day);
+    const dateKey = toKarachiDateKey(d.toISOString());
+    const slots = getAvailableSlotsSync(state, {
+      doctorId,
+      serviceId,
+      dateKey,
+      now,
+    });
+    if (slots.length > 0) return slots[0]!;
+  }
+  return null;
+}
+
+export interface FinalizeWhatsAppBookingInput {
+  conversationId: string;
+  patientName: string;
+  phoneNational: string;
+  doctorId: string;
+  serviceId: string;
+  locale?: "en" | "ur";
+  clientRequestId?: string;
+}
+
+/** AI/WhatsApp provisional hold — no staff actorUserId (same pattern as call holds). */
+export function finalizeWhatsAppBookingSync(
+  state: DemoState,
+  input: FinalizeWhatsAppBookingInput,
+  now: Date = getDemoNow(),
+): { state: DemoState; result: { appointmentId: string; patientId: string; scheduledStartIso: string } } {
+  const conversations = state.whatsappConversations ?? [];
+  const conv = conversations.find((c) => c.id === input.conversationId);
+  if (!conv) {
+    throw new DemoOperationError("WhatsApp conversation not found", "finalizeWhatsAppBooking");
+  }
+
+  let next = state;
+  let patient = next.patients.find(
+    (p) =>
+      p.phoneNational === input.phoneNational ||
+      p.fullName.toLowerCase() === input.patientName.toLowerCase(),
+  );
+
+  if (!patient) {
+    const created = createPatientSync(next, {
+      fullName: input.patientName,
+      phone: input.phoneNational,
+    });
+    next = created.state;
+    patient = created.result;
+  }
+
+  const slot = pickFutureSlotSync(next, input.doctorId, input.serviceId, now);
+  if (!slot) {
+    throw new DemoOperationError(
+      "No available slots for WhatsApp booking",
+      "finalizeWhatsAppBooking",
+    );
+  }
+
+  const reserved = createReservationSync(
+    next,
+    {
+      patientId: patient.id,
+      doctorId: input.doctorId,
+      serviceId: input.serviceId,
+      scheduledStartIso: slot,
+      clientRequestId: input.clientRequestId ?? id("wareq"),
+      locale: input.locale ?? "en",
+    },
+    now,
+  );
+  next = reserved.state;
+  const nowIso = now.toISOString();
+
+  next = {
+    ...next,
+    whatsappConversations: (next.whatsappConversations ?? []).map((c) =>
+      c.id === input.conversationId
+        ? {
+            ...c,
+            status: "booked" as const,
+            patientId: patient!.id,
+            appointmentId: reserved.result.id,
+            scheduledStartIso: reserved.result.scheduledStartIso,
+            requestedDoctorId: input.doctorId,
+            requestedServiceId: input.serviceId,
+            bookingOutcome: "provisional_reservation" as const,
+            updatedAt: nowIso,
+          }
+        : c,
+    ),
+  };
+
+  next = pushActivity(
+    next,
+    {
+      type: "whatsapp_booking",
+      message: `WhatsApp AI created provisional booking for ${input.patientName}`,
+      entityType: "appointment",
+      entityId: reserved.result.id,
+    },
+    nowIso,
+  );
+
+  return {
+    state: next,
+    result: {
+      appointmentId: reserved.result.id,
+      patientId: patient.id,
+      scheduledStartIso: reserved.result.scheduledStartIso,
+    },
+  };
+}
+
+export async function finalizeWhatsAppBooking(
+  adapter: DemoStoreAdapter,
+  input: FinalizeWhatsAppBookingInput,
+) {
+  return runMutation(adapter, "finalizeWhatsAppBooking", (s) =>
+    finalizeWhatsAppBookingSync(s, input, getDemoNow()),
+  );
+}
+
+export function upsertWhatsAppConversationSync(
+  state: DemoState,
+  conversation: DemoState["whatsappConversations"][number],
+): DemoState {
+  const list = state.whatsappConversations ?? [];
+  const exists = list.some((c) => c.id === conversation.id);
+  return {
+    ...state,
+    whatsappConversations: exists
+      ? list.map((c) => (c.id === conversation.id ? conversation : c))
+      : [conversation, ...list],
+  };
+}
+
+export async function upsertWhatsAppConversation(
+  adapter: DemoStoreAdapter,
+  conversation: DemoState["whatsappConversations"][number],
+) {
+  return runMutation(adapter, "upsertWhatsAppConversation", (s) => ({
+    state: upsertWhatsAppConversationSync(s, conversation),
+    result: conversation,
+  }));
+}

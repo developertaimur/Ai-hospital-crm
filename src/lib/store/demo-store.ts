@@ -46,6 +46,9 @@ export const useDemoStore = create<DemoStore>((set, get) => ({
       loaded = createSeedState(getDemoNow());
       saveState(loaded);
     }
+    if (!Array.isArray(loaded.whatsappConversations)) {
+      loaded = { ...loaded, whatsappConversations: [] };
+    }
     loaded = reconcile(loaded);
     saveState(loaded);
     set({ state: loaded, hydrated: true });

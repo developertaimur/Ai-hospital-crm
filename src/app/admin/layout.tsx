@@ -12,6 +12,7 @@ const nav: NavItem[] = [
   { href: "/admin/patients", label: "Patients" },
   { href: "/admin/payments", label: "Payments" },
   { href: "/admin/calls", label: "Calls" },
+  { href: "/admin/whatsapp", label: "WhatsApp" },
   { href: "/admin/callbacks", label: "Callbacks" },
   { href: "/admin/staff", label: "Staff" },
   { href: "/admin/settings", label: "Settings" },

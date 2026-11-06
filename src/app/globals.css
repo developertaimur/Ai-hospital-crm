@@ -1,18 +1,38 @@
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #f6f8fa;
+  --background: #f3f6f7;
   --surface: #ffffff;
-  --foreground: #0f172a;
-  --primary: #0f766e;
+  --foreground: #0f1f24;
+  --primary: #0f5f59;
   --primary-foreground: #ffffff;
-  --muted: #64748b;
-  --border: #e2e8f0;
+  --muted: #5b6b73;
+  --border: #e4ecee;
   --destructive: #dc2626;
-  --success: #16a34a;
-  --warning: #d97706;
-  --ring: #0f766e;
+  --success: #15803d;
+  --warning: #c2410c;
+  --ring: #0f5f59;
+  --accent-soft: #e7f4f2;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #0a1214;
+  --surface: #111b1e;
+  --foreground: #e8eef0;
+  --primary: #2dd4bf;
+  --primary-foreground: #042f2e;
+  --muted: #94a3b8;
+  --border: #1e2a2e;
+  --destructive: #f87171;
+  --success: #4ade80;
+  --warning: #fb923c;
+  --ring: #2dd4bf;
+  --accent-soft: #12332f;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -27,6 +47,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-ring: var(--ring);
+  --color-accent-soft: var(--accent-soft);
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
 

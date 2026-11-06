@@ -619,6 +619,163 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     },
   ];
 
+  const waBookedApt = pushApt({
+    patientId: "pat-8",
+    doctorId: "doc-ahmed",
+    serviceId: "svc-consult-cardio",
+    scheduledStartIso: aptStartOffsetDays(2, 11, 0),
+    scheduledEndIso: addMinutesIso(aptStartOffsetDays(2, 11, 0), 30),
+    status: "awaiting_payment",
+    arrivalStatus: "scheduled",
+    paymentStatus: "unpaid",
+    totalFeePaisa: 500000,
+    verifiedAmountPaisa: 0,
+    expiresAt: addMinutesIso(nowIso, 55),
+  });
+
+  const whatsappConversations: DemoState["whatsappConversations"] = [
+    {
+      id: id("wa"),
+      patientName: "Sadia Hussain",
+      phoneE164: "+923221122334",
+      phoneNational: "03221122334",
+      language: "en",
+      status: "handed_off",
+      patientId: "pat-8",
+      appointmentId: waBookedApt.id,
+      requestedDoctorId: "doc-ahmed",
+      requestedServiceId: "svc-consult-cardio",
+      scheduledStartIso: waBookedApt.scheduledStartIso,
+      bookingOutcome: "provisional_reservation",
+      summary:
+        "AI held a cardiology slot, then handed off to a human for payment details.",
+      handedOffToAdmin: true,
+      handoffReason: "payment_details",
+      scriptProgress: 6,
+      scriptTurns: [
+        {
+          role: "patient",
+          body: "Hello, can I book Dr. Taimur for cardiology via WhatsApp?",
+        },
+        {
+          role: "agent",
+          body: "Yes — I can place a provisional hold. Checking availability…",
+        },
+        {
+          role: "agent",
+          body: "Provisional slot held. A staff member will share payment details.",
+          createsBooking: true,
+        },
+        {
+          role: "system",
+          body: "Booking linked · awaiting payment (demo).",
+        },
+        {
+          role: "agent",
+          body: "Connecting you with staff for payment instructions.",
+          handOff: true,
+        },
+        {
+          role: "system",
+          body: "AI handed off · waiting for human takeover (payment details).",
+        },
+      ],
+      createdAt: addMinutesIso(nowIso, -90),
+      updatedAt: addMinutesIso(nowIso, -70),
+      messages: [
+        {
+          id: id("wam"),
+          role: "patient",
+          body: "Hello, can I book Dr. Taimur for cardiology via WhatsApp?",
+          createdAt: addMinutesIso(nowIso, -90),
+        },
+        {
+          id: id("wam"),
+          role: "agent",
+          body: "Yes — I can place a provisional hold. Checking availability…",
+          createdAt: addMinutesIso(nowIso, -88),
+        },
+        {
+          id: id("wam"),
+          role: "agent",
+          body: "Provisional slot held. A staff member will share payment details next — I can’t verify payments.",
+          createdAt: addMinutesIso(nowIso, -75),
+        },
+        {
+          id: id("wam"),
+          role: "system",
+          body: "Booking linked · awaiting payment (demo).",
+          createdAt: addMinutesIso(nowIso, -72),
+        },
+        {
+          id: id("wam"),
+          role: "agent",
+          body: "Connecting you with a hospital staff member for payment instructions now.",
+          createdAt: addMinutesIso(nowIso, -71),
+        },
+        {
+          id: id("wam"),
+          role: "system",
+          body: "AI handed off · waiting for human takeover (payment details).",
+          createdAt: addMinutesIso(nowIso, -70),
+        },
+      ],
+    },
+    {
+      id: id("wa"),
+      patientName: "Omar Siddiqui",
+      phoneE164: "+923451112233",
+      phoneNational: "03451112233",
+      language: "ur",
+      status: "handed_off",
+      requestedDoctorId: "doc-fatima",
+      requestedServiceId: "svc-consult-gp",
+      bookingOutcome: "callback_requested",
+      summary:
+        "Patient preferred a human callback from WhatsApp. AI handed off without booking.",
+      handedOffToAdmin: true,
+      handoffReason: "callback",
+      scriptProgress: 3,
+      scriptTurns: [
+        {
+          role: "patient",
+          body: "GP slot chahiye — pehle koi staff call kare?",
+        },
+        {
+          role: "agent",
+          body: "Theek hai — booking hold nahi ki. Staff se connect kar raha hoon.",
+          handOff: true,
+        },
+        {
+          role: "system",
+          body: "AI handed off · waiting for human takeover (callback).",
+        },
+      ],
+      createdAt: addMinutesIso(nowIso, -180),
+      updatedAt: addMinutesIso(nowIso, -160),
+      messages: [
+        {
+          id: id("wam"),
+          role: "patient",
+          body: "GP slot chahiye — pehle koi staff call kare?",
+          createdAt: addMinutesIso(nowIso, -180),
+        },
+        {
+          id: id("wam"),
+          role: "agent",
+          body: "Theek hai — booking hold nahi ki. Ab staff member se connect kar raha hoon.",
+          createdAt: addMinutesIso(nowIso, -165),
+        },
+        {
+          id: id("wam"),
+          role: "system",
+          body: "AI handed off · waiting for human takeover (callback).",
+          createdAt: addMinutesIso(nowIso, -160),
+        },
+      ],
+    },
+  ];
+
   const callRecords: DemoState["callRecords"] = [
     {
       id: id("call"),
@@ -851,6 +1008,7 @@ export function createSeedState(now: Date = getDemoNow()): DemoState {
     paymentClaims,
     callbacks,
     callRecords,
+    whatsappConversations,
     notifications,
     activityEvents,
     hospitalSettings: {

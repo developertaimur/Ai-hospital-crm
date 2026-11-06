@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 6 as const;
+export const SCHEMA_VERSION = 8 as const;
 
 export type Role = "admin" | "doctor" | "reception";
 
@@ -291,7 +291,8 @@ export type ActivityEventType =
   | "staff_change_simulated"
   | "doctor_created"
   | "doctor_updated"
-  | "doctor_deactivated";
+  | "doctor_deactivated"
+  | "whatsapp_booking";
 
 export interface ActivityEvent {
   id: string;
@@ -322,6 +323,66 @@ export interface HospitalSettings {
   aiGreetingNote?: string;
 }
 
+export type WhatsAppMessageRole = "patient" | "agent" | "staff" | "system";
+
+export type WhatsAppConversationStatus =
+  | "active"
+  | "booked"
+  | "handed_off"
+  | "human_active"
+  | "closed"
+  | "abandoned";
+
+export type WhatsAppHandoffReason =
+  | "payment_details"
+  | "callback"
+  | "slot_unavailable"
+  | "other";
+
+export interface WhatsAppScriptTurnSnapshot {
+  role: "patient" | "agent" | "system";
+  body: string;
+  createsBooking?: boolean;
+  handOff?: boolean;
+}
+
+export interface WhatsAppMessage {
+  id: string;
+  role: WhatsAppMessageRole;
+  body: string;
+  createdAt: string;
+  /** Staff author when role is staff */
+  authorUserId?: string;
+  authorLabel?: string;
+}
+
+export interface WhatsAppConversation {
+  id: string;
+  patientName: string;
+  phoneE164: string;
+  phoneNational: string;
+  language: DemoLocale;
+  status: WhatsAppConversationStatus;
+  messages: WhatsAppMessage[];
+  /** Full AI demo script for Admin review */
+  scriptTurns?: WhatsAppScriptTurnSnapshot[];
+  /** How many script turns have been played */
+  scriptProgress?: number;
+  requestedDoctorId?: string;
+  requestedServiceId?: string;
+  scheduledStartIso?: string;
+  patientId?: string;
+  appointmentId?: string;
+  bookingOutcome?: BookingOutcome;
+  summary?: string;
+  handedOffToAdmin?: boolean;
+  handoffReason?: WhatsAppHandoffReason;
+  takenOverByUserId?: string;
+  takenOverAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DemoState {
   schemaVersion: typeof SCHEMA_VERSION;
   departments: Department[];
@@ -339,6 +400,7 @@ export interface DemoState {
   paymentClaims: PaymentClaim[];
   callbacks: CallbackRequest[];
   callRecords: CallRecord[];
+  whatsappConversations: WhatsAppConversation[];
   notifications: NotificationRecord[];
   activityEvents: ActivityEvent[];
   hospitalSettings: HospitalSettings;
